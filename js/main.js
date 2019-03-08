@@ -27,7 +27,7 @@ window.onload = function () {
 	
 	// this is the interact/output element
 	var content = document.getElementById('content');
-	
+
 	// Chess interaction functions (chess.js); this comes with no engine!
 	var chess = new Chess();	
 	
@@ -44,7 +44,7 @@ window.onload = function () {
 			play(move);
 			// also, send this to the output-window 
 			// TODO: how to write this to variable instead inside element??
-			document.getElementById('result').textContent = move;
+			content.innerHTML = move;
 			// are we in check?
 			if(chess.in_check()) {
 				content.classList.add('inCheck');
@@ -52,12 +52,12 @@ window.onload = function () {
 			else {
 				content.classList.remove('inCheck');
 			}
-	};
 	}
+	};
 	
 	// provide select-box
 	var select;
-	function initialize_select() {
+	function provide_select() {
 			select = document.createElement("select");
 			content.appendChild(select);
 			select.options.length = 0;
@@ -79,7 +79,7 @@ window.onload = function () {
 				if (m.match(re)) {
 					curmoves.push(m);
 				}
-			})
+			});
 		}
 		return curmoves;
 	}
@@ -101,16 +101,16 @@ window.onload = function () {
 				var mlast = m.replace('+','');  // remove check mark '+'
 				 // if length gt 2 (no pawn move), more characters are included;
 				 // remove them; exception: castling
-				if (mlast.length>2 & !mlast.match(/-O/)) {
+				if (mlast.length>2 && !mlast.match(/-O/)) {
 					mlast = mlast.slice(-2);
 				}
 				if (!squares.includes(mlast)) {
 					squares.push(mlast);
 				}
-			})
+			});
 
 			// second, provide select-box for file == a)
-			initialize_select();
+			provide_select(files);
 			var files = [];
 			squares.forEach(function(m) {
 				var x = m.slice(0,1);
@@ -121,8 +121,8 @@ window.onload = function () {
 				if (!files.includes(x)) {
 					files.push(x);
 				}
-			})
-			for(index in files.sort()) {
+			});
+			for(var index in files.sort()) {
 				select.options[select.options.length] = new Option(files[index], index+1);
 			}
 			// on change of the select: store file, proceed
@@ -133,12 +133,12 @@ window.onload = function () {
 				// third, provide select-box for rank == b), if necessary
 				var curmoves = find_moves(moveF,moves);
 				// is this the only move? Then execute
-				if (curmoves.length==1) {
+				if (curmoves.length===1) {
 					play(curmoves[0]);
 					run();
 				}
 				else {				
-					initialize_select();
+					provide_select();
 					var ranks = [];
 					// narrow selection to ranks in the selected file
 					var narrowedSquares = [];
@@ -147,13 +147,13 @@ window.onload = function () {
 						if (m.match(re)) {
 							narrowedSquares.push(m);
 						}
-					})
+					});
 					narrowedSquares.forEach(function(m) {
 						var x = m.slice(1);
 						if (!ranks.includes(x)) {
 							ranks.push(x);
 						}
-					})
+					});
 					for(index in ranks.sort()) {
 						select.options[select.options.length] = new Option(ranks[index], index+1);
 					}
@@ -165,13 +165,13 @@ window.onload = function () {
 						// now lets try if we are finished
 						var curmoves = find_moves(moveF+moveR,moves);
 						// is this the only move? Then execute
-						if (curmoves.length==1) {
+						if (curmoves.length===1) {
 							play(curmoves[0]);
 							run();
 						}
 						// otherwise, we need to be some more specific
 						else {
-							initialize_select();
+							provide_select();
 							for(index in curmoves.sort()) {
 								select.options[select.options.length] = new Option(curmoves[index], index+1);
 							}
@@ -194,13 +194,11 @@ window.onload = function () {
 		stockfish.postMessage("go depth 1");
 		stockfish.postMessage("isready");
 
-		// provide feedback element
-		var result = document.createElement("p");
-		content.appendChild(result);
-		result.id = "result";
+		// providing feedback is handled in stockfish.onmessage(...)
 		// on click: remove feedback element, new turn
-		result.addEventListener("click", function(){
-			result.remove();
+		content.addEventListener("click", function f(){
+			content.removeEventListener("click",f);
+			content.innerHTML = "";
 			run();
 		});
 	}
@@ -236,31 +234,26 @@ window.onload = function () {
 		// only proceed if it is not game-over yet!
 		if(chess.game_over()) {
 		
+			content.innerHTML = "GameOver!";
 			// 1) checkmate?
 			if(chess.in_checkmate()) {
-				var result = document.createElement("p");
-				result.innerHTML = "Checkmate!";
-				content.appendChild(result);
+				content.innerHTML = "Checkmate!";
 			}
 
 			// 2) stalemate?
 			if(chess.in_stalemate()) {
-				var result = document.createElement("p");
-				result.innerHTML = "Stalemate!";
-				content.appendChild(result);
+				content.innerHTML = "Stalemate!";
 			}
 
 			// 3) draw?
-			if(chess.in_draw() | chess.in_threefold_repetition()) {
-				var result = document.createElement("p");
-				result.innerHTML = "Draw!";
-				content.appendChild(result);
+			if(chess.in_draw() || chess.in_threefold_repetition()) {
+				content.innerHTML = "Draw!";
 			}		
 		}
 		else { // not yet game-over
 			
 			// play the side on turn
-			if (chess.turn() == playerColor) {
+			if (chess.turn() === playerColor) {
 				turn_player();
 			}
 			else {
@@ -274,41 +267,62 @@ window.onload = function () {
 	}
 
 	
-	// Begin the game. Either choose white or black, or load a previously interrupted game.
+	// Begin the game. Either choose white or black, 
+	// or load a previously interrupted game.
 	var playerColor = "w"; //initialize playerColor with white
 	function start() {
 
-		// Box for black
-		var b = document.getElementById('chooseBlack');
-		b.addEventListener("click", function(){
-				playerColor = "b";
-		});
-
-		// Box for white
-		var w = document.getElementById('chooseWhite');
-		w.addEventListener("click", function(){
-				playerColor = "w";
-		});
-
-		// Box for Load game
-		var l = document.getElementById('chooseLoad');
-		l.addEventListener("click", function(){
-				chess.load_pgn(getCookieValue("pgn"), {sloppy:true});
-				// Test castling
-				//chess.load_pgn("1. e4 e6 2. Nf3 d6 3. Bb5+ c6 4. Qe2 f6 5. b4 cxb5 6. Ba3 a6 7. Nc3 Ne7", {sloppy:true});
-				// Test en passant
-				//chess.load_pgn("1. e4 e6 2. e5 d5", {sloppy:true});
-				playerColor = getCookieValue("playerColor");
-		});
-
-		// on click (regardless which option), remove this startbox
-		// and begin with the game!
 		var s = document.getElementById('startmenu');
-		s.addEventListener("click", function(){
-				s.remove();
-				fill_debug("");
-				run();
+
+		// little helper: everything is set, now begin with the game
+		function begin(pc){
+			playerColor = pc;  // set playerColor
+			s.remove(); // remove menue
+			fill_debug(""); // debugging
+			run(); // start the game
+		}
+			
+		// Box for Load game
+		var l = document.getElementById('lowermenuentry');
+		l.classList.add("chooseLoad");
+		l.innerHTML = "Load";
+		l.addEventListener("click", load);
+		function load(){
+			chess.load_pgn(getCookieValue("pgn"), {sloppy:true});
+			// Test castling
+			//chess.load_pgn("1. e4 e6 2. Nf3 d6 3. Bb5+ c6 4. Qe2 f6 5. b4 cxb5 6. Ba3 a6 7. Nc3 Ne7", {sloppy:true});
+			// Test en passant
+			//chess.load_pgn("1. e4 e6 2. e5 d5", {sloppy:true});
+			begin(getCookieValue("playerColor"));
+		}
+		
+		// Box for newGame
+		var n = document.getElementById('uppermenuentry');
+		n.classList.add("chooseNG");
+		n.innerHTML = "New";
+		n.addEventListener("click", function (){
+			
+			// remove event-listener of load game box,
+			// otherwise we have two events fired!
+			l.removeEventListener("click",load);
+
+			// Box for white
+			var w = document.getElementById('uppermenuentry');
+			w.classList.add("chooseWhite");
+			w.innerHTML = "White";
+			w.addEventListener("click", function(){
+					begin("w");
+			});
+
+			// Box for black
+			var b = document.getElementById('lowermenuentry');
+			b.classList.add("chooseBlack");
+			b.innerHTML = "Black";
+			b.addEventListener("click", function(){
+					begin("b");
+			});
 		});
+
 	}
 	
 	// initalize/setup/start with the game
