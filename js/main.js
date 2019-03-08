@@ -57,14 +57,34 @@ window.onload = function () {
 	
 	// provide select-box
 	var select;
-	function provide_select() {
+	/*
+	function provide_select(selectlist, onchangefunction) {
 			select = document.createElement("select");
 			content.appendChild(select);
 			select.options.length = 0;
 			select.options[select.options.length] = new Option("--", 0);
+			
+			for(var index in selectlist.sort()) {
+				select.options[select.options.length] = new Option(selectlist[index], index+1);
+			}
+			select.addEventListener("change", onchangefunction);
 	}
-
-						
+	 */
+	function provide_select(selectlist, onchangefunction) {
+		select = document.createElement("ul");
+		select.classList.add('circle');
+		for(var index in selectlist.sort()) {
+			var degree = index*45; // TODO: span over complete circle even if less than 8 elements
+			var circle_item = document.createElement("li");
+			circle_item.innerHTML = selectlist[index];
+			circle_item.classList.add('circle_item');
+			circle_item.classList.add('deg'+degree);
+			circle_item.addEventListener("click", onchangefunction);
+			select.appendChild(circle_item);
+		}
+		content.appendChild(select); 
+	}
+	
 	// function to check if a given "move", i.e. file/rank combination
 	// is in the movelist. Returns all moves foudn.
 	function find_moves(move, movelist) {
@@ -110,7 +130,6 @@ window.onload = function () {
 			});
 
 			// second, provide select-box for file == a)
-			provide_select(files);
 			var files = [];
 			squares.forEach(function(m) {
 				var x = m.slice(0,1);
@@ -122,14 +141,12 @@ window.onload = function () {
 					files.push(x);
 				}
 			});
-			for(var index in files.sort()) {
-				select.options[select.options.length] = new Option(files[index], index+1);
-			}
-			// on change of the select: store file, proceed
-			select.addEventListener("change", function(){
-				moveF = select.options[select.selectedIndex].text;
+			provide_select(files, function() {
+				// on change of the select: store file, proceed
+				//moveF = select.options[select.selectedIndex].text;
+				moveF = this.textContent;
 				select.remove();
-				
+					
 				// third, provide select-box for rank == b), if necessary
 				var curmoves = find_moves(moveF,moves);
 				// is this the only move? Then execute
@@ -138,7 +155,6 @@ window.onload = function () {
 					run();
 				}
 				else {				
-					provide_select();
 					var ranks = [];
 					// narrow selection to ranks in the selected file
 					var narrowedSquares = [];
@@ -154,14 +170,12 @@ window.onload = function () {
 							ranks.push(x);
 						}
 					});
-					for(index in ranks.sort()) {
-						select.options[select.options.length] = new Option(ranks[index], index+1);
-					}
-					// on change of the select: store rank, proceed
-					select.addEventListener("change", function(){
-						moveR = select.options[select.selectedIndex].text;
+					provide_select(ranks, function(){
+						// on change of the select: store rank, proceed
+						//moveR = select.options[select.selectedIndex].text;
+						moveR = this.textContent;
 						select.remove();
-	
+
 						// now lets try if we are finished
 						var curmoves = find_moves(moveF+moveR,moves);
 						// is this the only move? Then execute
@@ -171,21 +185,20 @@ window.onload = function () {
 						}
 						// otherwise, we need to be some more specific
 						else {
-							provide_select();
-							for(index in curmoves.sort()) {
-								select.options[select.options.length] = new Option(curmoves[index], index+1);
-							}
-							// on change of the select: go!
-							select.addEventListener("change", function(){
-								play(select.options[select.selectedIndex].text);
-								run();
+							provide_select(curmoves, function(){
+								// on change of the select: go!
+								//var foundmove = select.options[select.selectedIndex].text;
+								var foundmove = this.textContent;
 								select.remove();
+								play(foundmove);
+								run();
 							});
 						}
-					});				
+					});
 				}
-			});
+			});				
 	}
+				
 
 	// Engine's turn
 	function turn_engine() {

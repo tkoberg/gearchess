@@ -1,0 +1,22 @@
+.circle {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    padding: 0;
+    margin: 0px 50px;
+}
+.circle li {
+    display: block;
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 5px; height: 5px;
+    margin: -25px;
+}
+.deg0   { transform: translate(150px); } /* half the width of the wrapper */
+.deg45  { transform: rotate(45deg) translate(150px) rotate(-45deg); }
+.deg90  { transform: rotate(90deg) translate(150px) rotate(-90deg); }
+.deg135 { transform: rotate(135deg) translate(150px) rotate(-135deg); }
+.deg180 { transform: translate(-150px); }
+.deg225 { transform: rotate(225deg) translate(150px) rotate(-225deg); }
+.deg270 { transform: rotate(270deg) translate(150px) rotate(-270deg); }
+.deg315 { transform: rotate(315deg) translate(150px) rotate(-315deg); }
