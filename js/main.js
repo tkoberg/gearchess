@@ -23,10 +23,13 @@ window.onload = function () {
 
 	// set to true for debugging
 	var debug = true;
-	//var debug = false;
+	var debug = false;
 	
 	// this is the interact/output element
 	var content = document.getElementById('content');
+	if (debug) {
+		content.style.border = '2px solid red'; 
+	}
 
 	// Chess interaction functions (chess.js); this comes with no engine!
 	var chess = new Chess();	
@@ -44,7 +47,7 @@ window.onload = function () {
 			play(move);
 			// also, send this to the output-window 
 			// TODO: how to write this to variable instead inside element??
-			content.innerHTML = move;
+			enginemove.innerHTML= move;
 			// are we in check?
 			if(chess.in_check()) {
 				content.classList.add('inCheck');
@@ -74,11 +77,16 @@ window.onload = function () {
 		select = document.createElement("ul");
 		select.classList.add('circle');
 		for(var index in selectlist.sort()) {
-			var degree = index*45; // TODO: span over complete circle even if less than 8 elements
+			var degree = Math.floor(360/(selectlist.length*45))*45*index; // TODO: Bug with 5 elements
 			var circle_item = document.createElement("li");
 			circle_item.innerHTML = selectlist[index];
 			circle_item.classList.add('circle_item');
-			circle_item.classList.add('deg'+degree);
+			if (selectlist[index]==="O") {
+				circle_item.classList.add('degNaN');
+			}
+			else {
+				circle_item.classList.add('deg'+degree);
+			}
 			circle_item.addEventListener("click", onchangefunction);
 			select.appendChild(circle_item);
 		}
@@ -86,7 +94,7 @@ window.onload = function () {
 	}
 	
 	// function to check if a given "move", i.e. file/rank combination
-	// is in the movelist. Returns all moves foudn.
+	// is in the movelist. Returns all moves found.
 	function find_moves(move, movelist) {
 		var curmoves = [];
 		// exception: castling
@@ -114,7 +122,7 @@ window.onload = function () {
 	function turn_player() {
 
 			var moves = chess.moves();
-						
+			
 			// first, create a list with all possible target squares
 			var squares = [];
 			moves.forEach(function(m) {
@@ -135,7 +143,7 @@ window.onload = function () {
 				var x = m.slice(0,1);
 				// exception: castling
 				if (m.match(/-O/)) {
-					x = m;
+					x = "O";
 				}
 				if (!files.includes(x)) {
 					files.push(x);
@@ -170,6 +178,16 @@ window.onload = function () {
 							ranks.push(x);
 						}
 					});
+					
+					// show first selection in center
+					var centerselection = document.createElement("span");
+					centerselection.innerHTML = moveF;
+					centerselection.classList.add('centerselection');
+					centerselection.addEventListener("click", function () {
+						content.innerHTML = "";
+						turn_player(); // on click, revert selection and start again
+					});
+
 					provide_select(ranks, function(){
 						// on change of the select: store rank, proceed
 						//moveR = select.options[select.selectedIndex].text;
@@ -195,6 +213,9 @@ window.onload = function () {
 							});
 						}
 					});
+					
+					select.appendChild(centerselection); 
+					
 				}
 			});				
 	}
@@ -209,8 +230,11 @@ window.onload = function () {
 
 		// providing feedback is handled in stockfish.onmessage(...)
 		// on click: remove feedback element, new turn
-		content.addEventListener("click", function f(){
-			content.removeEventListener("click",f);
+		var enginemove = document.createElement("span");
+		content.appendChild(enginemove);
+		enginemove.id = "enginemove";
+		enginemove.addEventListener("click", function f(){
+			enginemove.removeEventListener("click",f);
 			content.innerHTML = "";
 			run();
 		});
@@ -234,7 +258,7 @@ window.onload = function () {
 			document.getElementById('debug').innerHTML= log;
 		}
 	}
-	
+ 	
 	// Little helper: execute one single move
 	function play(move) {
 		chess.move(move, {sloppy: true});
@@ -247,20 +271,29 @@ window.onload = function () {
 		// only proceed if it is not game-over yet!
 		if(chess.game_over()) {
 		
-			content.innerHTML = "GameOver!";
+			var message = document.createElement("span");
+			content.appendChild(message);
+			message.id = "message";
+			// on click, review the complete game
+			message.addEventListener("click", function f(){
+				message.id = "history";
+				message.innerHTML = chess.pgn({ max_width: 5, newline_char: '<br />' });
+			});
+
+			message.innerHTML = "GameOver!";
 			// 1) checkmate?
 			if(chess.in_checkmate()) {
-				content.innerHTML = "Checkmate!";
+				message.innerHTML = "Check-mate!";
 			}
 
 			// 2) stalemate?
 			if(chess.in_stalemate()) {
-				content.innerHTML = "Stalemate!";
+				message.innerHTML = "Stale-mate!";
 			}
 
 			// 3) draw?
 			if(chess.in_draw() || chess.in_threefold_repetition()) {
-				content.innerHTML = "Draw!";
+				message.innerHTML = "Draw!";
 			}		
 		}
 		else { // not yet game-over
@@ -301,12 +334,15 @@ window.onload = function () {
 		l.innerHTML = "Load";
 		l.addEventListener("click", load);
 		function load(){
-			chess.load_pgn(getCookieValue("pgn"), {sloppy:true});
+			// Load previously saved (==cookie) game
+			chess.load_pgn(getCookieValue("pgn"), {sloppy:true}); begin(getCookieValue("playerColor"));
+			
 			// Test castling
-			//chess.load_pgn("1. e4 e6 2. Nf3 d6 3. Bb5+ c6 4. Qe2 f6 5. b4 cxb5 6. Ba3 a6 7. Nc3 Ne7", {sloppy:true});
+			//chess.load_pgn("1. e4 e6 2. Nf3 d6 3. Bb5+ c6 4. Qe2 f6 5. b4 cxb5 6. Ba3 a6 7. Nc3 Ne7", {sloppy:true});begin("w");
 			// Test en passant
-			//chess.load_pgn("1. e4 e6 2. e5 d5", {sloppy:true});
-			begin(getCookieValue("playerColor"));
+			//chess.load_pgn("1. e4 e6 2. e5 d5", {sloppy:true});begin("w");
+			// Test next move check, then checkmate
+			//chess.load_pgn("1. e4 e6 2. Nf3 d6 3. Bb5+ c6 4. Qe2 f6 5. b4 cxb5 6. Ba3 a6 7. Nc3 Ne7 8. Kf1 Nbc6 9. Qxb5 axb5 10. Nd5 exd5 11. Ne5 dxe5 12. Rb1 Rxa3 13. Kg1 Rb3 14. Re1 d4 15. Re2", {sloppy:true});begin("w");
 		}
 		
 		// Box for newGame

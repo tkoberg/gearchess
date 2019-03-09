@@ -13,9 +13,29 @@ body {
 	box-sizing: border-box;
 	-webkit-box-sizing: border-box;
 	height:360px;
+	width: 360px;
 }
 
+#enginemove {
+	text-align: center;
+	line-height: 360px;
+	width: 360px;
+}
 
+#message {
+	text-align: center;
+	line-height: 180px;
+	width: 360px;
+}
+
+#history {
+	display: block;
+	text-align: center;
+	width: 360px;
+	font-size: 20px;
+  	color:#fff;
+}
+	
 .content_text {
 	font-weight:bold;
 	/*font-size:5em;*/
@@ -23,7 +43,7 @@ body {
 }
 
 .inCheck{
-	background-color: red !important;
+	color: red !important;
 }
 
 #debug, #content{
@@ -32,7 +52,7 @@ body {
 
 #content{
 	font-weight:bold;
-	font-size:5em;
+	font-size:4em;
 }
 
 pre {
