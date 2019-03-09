@@ -23,7 +23,7 @@ window.onload = function () {
 
 	// set to true for debugging
 	var debug = true;
-	var debug = false;
+	//var debug = false;
 	
 	// this is the interact/output element
 	var content = document.getElementById('content');
@@ -93,23 +93,28 @@ window.onload = function () {
 		content.appendChild(select); 
 	}
 	
-	// function to check if a given "move", i.e. file/rank combination
+	// function to check if a given "move", i.e. file/rank(/piece) combination
 	// is in the movelist. Returns all moves found.
-	function find_moves(move, movelist) {
-		var curmoves = [];
-		// exception: castling
-		if (move.match(/-O/)) {
-			curmoves[0] = move;
-		}
-		else {
-			var re = new RegExp(move, 'g');
-			movelist.forEach(function(m) {
-				if (m.match(re)) {
-					curmoves.push(m);
-				}
-			});
+	function find_moves(value, key, movelist) {
+		var curmoves = {};
+		for (m in movelist) {
+			if (movelist[m][key] == value) {
+				curmoves[m] = movelist[m];
+			}
 		}
 		return curmoves;
+	}
+	
+	// little helper to print the current already selected elements inside the circle
+	function fill_center(txt) {
+		centerselection = document.createElement("span");
+		centerselection.innerHTML = txt;
+		centerselection.classList.add('centerselection');
+		centerselection.addEventListener("click", function () {
+			content.innerHTML = "";
+			turn_player(); // on click, revert selection and start again
+		});
+		return centerselection;
 	}
 	
 	// Player's turn
@@ -118,104 +123,89 @@ window.onload = function () {
 	// b) select rank where to move
 	// c) select piece to move (optional, only if more than one can move to selection)
 	
-	var moveF, moveR; // variables to store target square (file and rank)
+	var moveF, moveR, moveP; // variables to store target square (file/rank/piece)
 	function turn_player() {
 
 			var moves = chess.moves();
+			// first split up each move into hash containing single elements
+			var curmoves = {};
+			chess.moves().forEach(function(m) {
+				m = m.replace('+','');  // remove check mark '+'
+				var mm = {
+					"file" : m.slice(-2)[0],
+					"rank" : m.slice(-1),
+					"square" : m.slice(-2),
+					"piece": m.slice(0,-2), // if empty, it is a pawn move
+					"move" : m // just for convenience
+				};
+				curmoves[m] = mm;
+			});
 			
-			// first, create a list with all possible target squares
-			var squares = [];
-			moves.forEach(function(m) {
-				var mlast = m.replace('+','');  // remove check mark '+'
-				 // if length gt 2 (no pawn move), more characters are included;
-				 // remove them; exception: castling
-				if (mlast.length>2 && !mlast.match(/-O/)) {
-					mlast = mlast.slice(-2);
-				}
-				if (!squares.includes(mlast)) {
-					squares.push(mlast);
-				}
-			});
-
-			// second, provide select-box for file == a)
+			// provide select-box for file == a)
 			var files = [];
-			squares.forEach(function(m) {
-				var x = m.slice(0,1);
-				// exception: castling
-				if (m.match(/-O/)) {
-					x = "O";
+			for (m in curmoves) {
+				var f = curmoves[m]["file"];
+				if (!files.includes(f)) {
+					files.push(f);
 				}
-				if (!files.includes(x)) {
-					files.push(x);
-				}
-			});
+			}
 			provide_select(files, function() {
 				// on change of the select: store file, proceed
-				//moveF = select.options[select.selectedIndex].text;
 				moveF = this.textContent;
 				select.remove();
 					
 				// third, provide select-box for rank == b), if necessary
-				var curmoves = find_moves(moveF,moves);
+				curmoves = find_moves(moveF, "file", curmoves);
 				// is this the only move? Then execute
-				if (curmoves.length===1) {
-					play(curmoves[0]);
+				if (Object.keys(curmoves).length===1) {	
+					play(Object.keys(curmoves)[0]);
 					run();
 				}
 				else {				
 					var ranks = [];
-					// narrow selection to ranks in the selected file
-					var narrowedSquares = [];
-					var re = new RegExp(moveF, 'g');
-					squares.forEach(function(m) {
-						if (m.match(re)) {
-							narrowedSquares.push(m);
+					for (m in curmoves) {
+						var r = curmoves[m]["rank"];
+						if (!ranks.includes(r)) {
+							ranks.push(r);
 						}
-					});
-					narrowedSquares.forEach(function(m) {
-						var x = m.slice(1);
-						if (!ranks.includes(x)) {
-							ranks.push(x);
-						}
-					});
+					}
 					
-					// show first selection in center
-					var centerselection = document.createElement("span");
-					centerselection.innerHTML = moveF;
-					centerselection.classList.add('centerselection');
-					centerselection.addEventListener("click", function () {
-						content.innerHTML = "";
-						turn_player(); // on click, revert selection and start again
-					});
-
 					provide_select(ranks, function(){
 						// on change of the select: store rank, proceed
-						//moveR = select.options[select.selectedIndex].text;
 						moveR = this.textContent;
 						select.remove();
 
 						// now lets try if we are finished
-						var curmoves = find_moves(moveF+moveR,moves);
+						curmoves = find_moves(moveF+moveR,"square", curmoves);
 						// is this the only move? Then execute
-						if (curmoves.length===1) {
-							play(curmoves[0]);
+						if (Object.keys(curmoves).length===1) {	
+							play(Object.keys(curmoves)[0]);
 							run();
 						}
 						// otherwise, we need to be some more specific
 						else {
-							provide_select(curmoves, function(){
+							var pieces = [];
+							for (m in curmoves) {
+								var p = curmoves[m]["piece"];
+								if (!pieces.includes(p)) {
+									pieces.push(p);
+								}
+							}
+
+							provide_select(pieces, function(){
 								// on change of the select: go!
-								//var foundmove = select.options[select.selectedIndex].text;
-								var foundmove = this.textContent;
+								moveP = this.textContent;
+								curmoves = find_moves(moveP+moveF+moveR,"move", curmoves);
 								select.remove();
-								play(foundmove);
+								play(Object.keys(curmoves)[0]);
 								run();
 							});
+							
+							select.appendChild(fill_center(moveF+moveR)); 
 						}
 					});
 					
-					select.appendChild(centerselection); 
-					
+					select.appendChild(fill_center(moveF)); 
 				}
 			});				
 	}
