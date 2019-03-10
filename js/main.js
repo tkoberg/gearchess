@@ -37,9 +37,17 @@ window.onload = function () {
 	// initalize the engine (stockfish.js)
 	var stockfish = new Worker('js/stockfish/src/stockfish.js');
 	stockfish.postMessage("ucinewgame");
+	
 	// read the response of the engine and ...
+	var score=0;
 	stockfish.onmessage = function(event) { 
 		if(debug) { console.log(event.data) };
+		
+		// .. save the current centipawns score
+		if (/score cp/.test(event.data)) {
+			score = event.data.match(/score cp (\S+)/)[1];
+		}
+
 		// ... look for the keyword 'bestmove' ...
 		if (/bestmove/.test(event.data)) {
 			/// ... and extract/play it!
@@ -124,6 +132,8 @@ window.onload = function () {
 	
 	var moveF, moveR, moveP; // variables to store target square (file/rank/piece)
 	function turn_player() {
+
+			document.getElementById('score').innerHTML=score/100;
 
 			// first split up each move into hash containing single elements
 			var curmoves = {};
