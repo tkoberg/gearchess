@@ -60,28 +60,17 @@ window.onload = function () {
 	
 	// provide select-box
 	var select;
-	/*
-	function provide_select(selectlist, onchangefunction) {
-			select = document.createElement("select");
-			content.appendChild(select);
-			select.options.length = 0;
-			select.options[select.options.length] = new Option("--", 0);
-			
-			for(var index in selectlist.sort()) {
-				select.options[select.options.length] = new Option(selectlist[index], index+1);
-			}
-			select.addEventListener("change", onchangefunction);
-	}
-	 */
 	function provide_select(selectlist, onchangefunction) {
 		select = document.createElement("ul");
 		select.classList.add('circle');
-		for(var index in selectlist.sort()) {
-			var degree = Math.floor(360/(selectlist.length*45))*45*index; // TODO: Bug with 5 elements
+		var n = selectlist.length >8 ? 8 : selectlist.length; // use a maximum of eight elements on circle
+		for(var index in selectlist.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase())})) {
+			var degree = Math.floor(360/(n*45))*45*index; 
 			var circle_item = document.createElement("li");
-			circle_item.innerHTML = selectlist[index];
 			circle_item.classList.add('circle_item');
-			if (selectlist[index]==="O") {
+			circle_item.innerHTML = selectlist[index];
+			// if more than eight (==nine!), place in the middle
+			if (index>=n) {
 				circle_item.classList.add('degNaN');
 			}
 			else {
@@ -126,7 +115,6 @@ window.onload = function () {
 	var moveF, moveR, moveP; // variables to store target square (file/rank/piece)
 	function turn_player() {
 
-			var moves = chess.moves();
 			// first split up each move into hash containing single elements
 			var curmoves = {};
 			chess.moves().forEach(function(m) {
@@ -138,6 +126,9 @@ window.onload = function () {
 					"piece": m.slice(0,-2), // if empty, it is a pawn move
 					"move" : m // just for convenience
 				};
+				// exception: castling
+				if (m==="O-O")   { mm = { "file" : "O", "rank": "-O",   "square": "O-O",   "move": m }};
+				if (m==="O-O-O") { mm = { "file" : "O", "rank": "-O-O", "square": "O-O-O", "move": m }};				
 				curmoves[m] = mm;
 			});
 			
@@ -153,9 +144,10 @@ window.onload = function () {
 				// on change of the select: store file, proceed
 				moveF = this.textContent;
 				select.remove();
-					
+			
 				// third, provide select-box for rank == b), if necessary
 				curmoves = find_moves(moveF, "file", curmoves);
+				
 				// is this the only move? Then execute
 				if (Object.keys(curmoves).length===1) {	
 					play(Object.keys(curmoves)[0]);
@@ -177,6 +169,7 @@ window.onload = function () {
 
 						// now lets try if we are finished
 						curmoves = find_moves(moveF+moveR,"square", curmoves);
+
 						// is this the only move? Then execute
 						if (Object.keys(curmoves).length===1) {	
 							play(Object.keys(curmoves)[0]);
