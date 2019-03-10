@@ -37,9 +37,9 @@ window.onload = function () {
 	// initalize the engine (stockfish.js)
 	var stockfish = new Worker('js/stockfish/src/stockfish.js');
 	stockfish.postMessage("ucinewgame");
-	stockfish.postMessage("isready");
 	// read the response of the engine and ...
 	stockfish.onmessage = function(event) { 
+		if(debug) { console.log(event.data) };
 		// ... look for the keyword 'bestmove' ...
 		if (/bestmove/.test(event.data)) {
 			/// ... and extract/play it!
@@ -308,8 +308,37 @@ window.onload = function () {
 		function begin(pc){
 			playerColor = pc;  // set playerColor
 			s.remove(); // remove menue
-			fill_debug(""); // debugging
-			run(); // start the game
+			/*
+			set difficulty
+			found those elo ratings on the internet, no clue if this maps right. It is some rough idea though...
+				0: 1100
+				1: 1165
+				2: 1230
+				3: 1295
+				4: 1360
+				5: 1425
+				6: 1490
+				7: 1555
+				8: 1620
+				9: 1685
+				10:1750
+				11:1832
+				12:1914
+				13:1996
+				14:2078
+				15:2160
+				16:2242
+				17:2324
+				18:2406
+				19:2488
+				20:2570
+			*/
+			provide_select(["1","2","3","4","5","6","7","8"], function(){
+				stockfish.postMessage("setoption name Skill Level value "+ this.textContent);
+				select.remove();
+				fill_debug(""); // debugging
+				run(); // start the game				
+			});
 		}
 			
 		// Box for Load game
