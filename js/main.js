@@ -58,13 +58,23 @@ window.onload = function () {
 	}
 	};
 	
+	// little helper: sort  lexicographically, unless castling/promotion (should come last)
+	function sort_select (a,b) {
+		var r = a.toLowerCase().localeCompare(b.toLowerCase()); 
+		if (a==="=") r=1;
+		if (a==="O") r=1;
+		if (b==="=") r=-1;
+		if (b==="O") r=-1;
+		return r;
+	}
+	
 	// provide select-box
 	var select;
 	function provide_select(selectlist, onchangefunction) {
 		select = document.createElement("ul");
 		select.classList.add('circle');
 		var n = selectlist.length >8 ? 8 : selectlist.length; // use a maximum of eight elements on circle
-		for(var index in selectlist.sort(function (a, b) { return a.toLowerCase().localeCompare(b.toLowerCase())})) {
+		for(var index in selectlist.sort(sort_select)) {
 			var degree = Math.floor(360/(n*45))*45*index; 
 			var circle_item = document.createElement("li");
 			circle_item.classList.add('circle_item');
@@ -119,6 +129,7 @@ window.onload = function () {
 			var curmoves = {};
 			chess.moves().forEach(function(m) {
 				m = m.replace('+','');  // remove check mark '+'
+				m = m.replace('#','');  // remove checkmate mark '#'
 				var mm = {
 					"file" : m.slice(-2)[0],
 					"rank" : m.slice(-1),
@@ -141,6 +152,7 @@ window.onload = function () {
 					files.push(f);
 				}
 			}
+			
 			provide_select(files, function() {
 				// on change of the select: store file, proceed
 				moveF = this.textContent;
@@ -209,7 +221,7 @@ window.onload = function () {
 	function turn_engine() {
 		// send the current situation to the engine (evaluate this!)
 		stockfish.postMessage("position fen "+ chess.fen());
-		stockfish.postMessage("go depth 1");
+		stockfish.postMessage("go depth 6");
 		stockfish.postMessage("isready");
 
 		// providing feedback is handled in stockfish.onmessage(...)
@@ -311,6 +323,7 @@ window.onload = function () {
 			/*
 			set difficulty
 			found those elo ratings on the internet, no clue if this maps right. It is some rough idea though...
+			TODO: save and load difficulty for resume game
 				0: 1100
 				1: 1165
 				2: 1230
@@ -356,6 +369,11 @@ window.onload = function () {
 			//chess.load_pgn("1. e4 e6 2. e5 d5", {sloppy:true});begin("w");
 			// Test next move check, then checkmate
 			//chess.load_pgn("1. e4 e6 2. Nf3 d6 3. Bb5+ c6 4. Qe2 f6 5. b4 cxb5 6. Ba3 a6 7. Nc3 Ne7 8. Kf1 Nbc6 9. Qxb5 axb5 10. Nd5 exd5 11. Ne5 dxe5 12. Rb1 Rxa3 13. Kg1 Rb3 14. Re1 d4 15. Re2", {sloppy:true});begin("w");
+			
+			//chess.load_pgn("1. e4 d6 2. d4 Nf6 3. Nc3 e5 4. Nf3 Nbd7 5. a4 a6 6. Bc4 Nb6 7. Bxf7+ Kxf7 8. dxe5 Ne8 9. a5 Be7 10. axb6 dxe5 11. Nxe5+ Kg8 12. O-O Bf6 13. Ng4 Bg5 14. Qe2 Bxc1 15. Raxc1 Qd7 16. Ne3 Qf7 17. f4 h6 18. f5 cxb6 19. e5 Qf8 20. Rcd1 Qb4 21. Ned5 Qc5+ 22. Kh1 Nc7 23. Qh5 Bd7 24. Nf6+ Kf8 25. Nxd7+ Kg8 26. f6 Qxc3 27. fxg7 Qc4 28. Qg6 Qxf1+ 29. Rxf1 Nd5 30. Rf8+ Rxf8", {sloppy:true});begin("w");
+			//chess.load_pgn("1. e4 d6 2. d4 Nf6 3. Nc3 e5 4. Nf3 Nbd7 5. a4 a6 6. Bc4 Nb6 7. Bxf7+ Kxf7 8. dxe5 Ne8 9. a5 Be7 10. axb6 dxe5 11. Nxe5+ Kg8 12. O-O Bf6 13. Ng4 Bg5 14. Qe2 Bxc1 15. Raxc1 Qd7 16. Ne3 Qf7 17. f4 h6 18. f5 cxb6 19. e5 Qf8 20. Rcd1 Qb4 21. Ned5 Qc5+ 22. Kh1 Nc7 23. Qh5 Bd7 24. Nf6+ Kf8 25. Nxd7+ Kg8 26. f6 Qxc3 27. fxg7 Qc4 28. Qg6 Qxf1+ 29. Rxf1 Nd5 30. Rf8+ Rxf8 31. gxh8=Q+ Kxh8 32. Nxf8 Nf6 33. exf6 a5", {sloppy:true});begin("w");
+			// Test promotion
+			//chess.load_pgn("1. b4 b5 2. a4 a5 3. axb5 Nc6 4. bxa5 Ne5 5. a6 Rb8 6. a7 Rb6 7. c3 Rh6 8. b6 Rg6 9. b7 Ng4", {sloppy:true});begin("w");
 		}
 		
 		// Box for newGame
