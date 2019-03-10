@@ -123,15 +123,16 @@ window.onload = function () {
 					"file" : m.slice(-2)[0],
 					"rank" : m.slice(-1),
 					"square" : m.slice(-2),
-					"piece": m.slice(0,-2), // if empty, it is a pawn move
-					"move" : m // just for convenience
+					"piece": m.slice(0,-2)? m.slice(0,-2):"P", // if empty, it is a pawn move
 				};
 				// exception: castling
-				if (m==="O-O")   { mm = { "file" : "O", "rank": "-O",   "square": "O-O",   "move": m }};
-				if (m==="O-O-O") { mm = { "file" : "O", "rank": "-O-O", "square": "O-O-O", "move": m }};				
+				if (m==="O-O")   { mm = { "file" : "O", "rank": "-O",   "square": m, "piece": "" }};
+				if (m==="O-O-O") { mm = { "file" : "O", "rank": "-O-O", "square": m, "piece": "" }};				
+				
+				mm["move"] = mm["piece"]+mm["file"]+mm["rank"]; // so find_moves() will find something later
 				curmoves[m] = mm;
 			});
-			
+
 			// provide select-box for file == a)
 			var files = [];
 			for (m in curmoves) {
