@@ -43,10 +43,31 @@ window.onload = function () {
 	stockfish.onmessage = function(event) { 
 		if(debug) { console.log(event.data) };
 		
-		// .. save the current centipawns score
+		// ... save the current centipawns score
 		if (/score cp/.test(event.data)) {
 			score = event.data.match(/score cp (\S+)/)[1];
+			score = score/100; // normalize (usual way to display)
+			// if player is white, engine is black, so score must be inverted,
+			// as: score cp == "the score from the engine's point of view in centipawns"
+			if (playerColor === "w") { 
+				score = -score;
+			}
 		}
+		// ... or mate
+		if (/mate/.test(event.data)) {
+			score = event.data.match(/mate (\S+)/)[1];
+			if ( (mate>0 && playerColor === "w") || (mate<0 && playerColor === "b") ) { score = 99; }
+			else { score = -99; }
+		}
+		
+		// transform centipawn score (= 1/100 pawn) to scale between 0 an 100%
+		var tscore = Math.round(50 + (score * 5));
+		if (tscore<0)   tscore=1;
+		if (tscore>100) tscore=99;
+		if(debug) console.log("Current Score: "+score +" (cp), "+tscore+ "(%)");
+		var displayScore = document.getElementById('score');
+		if (displayScore) { displayScore.className = "c100 p"+tscore; }
+
 
 		// ... look for the keyword 'bestmove' ...
 		if (/bestmove/.test(event.data)) {
@@ -132,8 +153,6 @@ window.onload = function () {
 	
 	var moveF, moveR, moveP; // variables to store target square (file/rank/piece)
 	function turn_player() {
-
-			document.getElementById('score').innerHTML=score/100;
 
 			// first split up each move into hash containing single elements
 			var curmoves = {};
@@ -231,19 +250,35 @@ window.onload = function () {
 	function turn_engine() {
 		// send the current situation to the engine (evaluate this!)
 		stockfish.postMessage("position fen "+ chess.fen());
-		stockfish.postMessage("go depth 6");
+		stockfish.postMessage("go depth 10");
 		stockfish.postMessage("isready");
 
 		// providing feedback is handled in stockfish.onmessage(...)
 		// on click: remove feedback element, new turn
 		var enginemove = document.createElement("span");
-		content.appendChild(enginemove);
 		enginemove.id = "enginemove";
+		
+		var score = document.createElement("div");
+		score.id = "score";
+		var slice = document.createElement("div");
+		slice.className = "slice";
+		var bar = document.createElement("div");
+		bar.className = "bar";
+		var fill = document.createElement("div");
+		fill.className = "fill";
+
+		slice.appendChild(bar);
+		slice.appendChild(fill);
+		score.appendChild(slice);
+		score.appendChild(enginemove);
+		content.appendChild(score);
+
 		enginemove.addEventListener("click", function f(){
 			enginemove.removeEventListener("click",f);
 			content.innerHTML = "";
 			run();
 		});
+
 	}
 
 	// Print some debugging
