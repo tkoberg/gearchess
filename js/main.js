@@ -67,10 +67,10 @@ window.onload = function () {
 		if (score===-99) tscore=0;
 		if (score===99)  tscore=100;
 
-	          var dscore = 90 + ( 360 * tscore/100 );
+	        var dscore = 90 + 3.6*(tscore - (tscore>50?50:0));
 		if(debug) console.log("Current Score: "+score +" (cp), "+tscore+ "(%), ", +dscore+ "(deg)");
 		var displayScore = document.getElementById('score');
-	          if (displayScore) {
+	        if (displayScore) {
 		    var nonscoreColor = "#444";
 		    var scoreColor = (tscore>50)? "#fff":nonscoreColor;
 		    displayScore.setAttribute("style", "background-image: linear-gradient("+dscore+"deg, transparent 50%, "+scoreColor+" 50%), linear-gradient(90deg, "+nonscoreColor+" 50%, transparent 50%)");
