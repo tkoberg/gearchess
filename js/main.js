@@ -43,12 +43,12 @@ window.onload = function () {
 	stockfish.onmessage = function(event) { 
 		if(debug) { console.log(event.data) };
 		
-		// ... save the current centipawns score
+		// ... save the current centipawn score (= 1/100 pawn)
 		if (/score cp/.test(event.data)) {
 			score = event.data.match(/score cp (\S+)/)[1];
 			score = score/100; // normalize (usual way to display)
-			// if player is white, engine is black, so score must be inverted,
-			// as: score cp == "the score from the engine's point of view in centipawns"
+			// if player is white, engine is black, so score must be inverted, because:
+			// score cp == "the score from the engine's point of view in centipawns"
 			if (playerColor === "w") { 
 				score = -score;
 			}
@@ -56,18 +56,25 @@ window.onload = function () {
 		// ... or mate
 		if (/mate/.test(event.data)) {
 			score = event.data.match(/mate (\S+)/)[1];
-			if ( (mate>0 && playerColor === "w") || (mate<0 && playerColor === "b") ) { score = 99; }
-			else { score = -99; }
+			if ( (score>0 && playerColor === "w") || (score<0 && playerColor === "b") ) { score = -99; }
+			else { score = 99; }
 		}
 		
-		// transform centipawn score (= 1/100 pawn) to scale between 0 an 100%
+		// transform centipawn score to scale between 0 an 100% (tscore) and degree (dscore, see css)
 		var tscore = Math.round(50 + (score * 5));
-		if (tscore<0)   tscore=1;
-		if (tscore>100) tscore=99;
-		if(debug) console.log("Current Score: "+score +" (cp), "+tscore+ "(%)");
-		var displayScore = document.getElementById('score');
-		if (displayScore) { displayScore.className = "c100 p"+tscore; }
+		if (tscore<0)    tscore=1;
+		if (tscore>100)  tscore=99;
+		if (score===-99) tscore=0;
+		if (score===99)  tscore=100;
 
+	          var dscore = 90 + ( 360 * tscore/100 );
+		if(debug) console.log("Current Score: "+score +" (cp), "+tscore+ "(%), ", +dscore+ "(deg)");
+		var displayScore = document.getElementById('score');
+	          if (displayScore) {
+		    var nonscoreColor = "#444";
+		    var scoreColor = (tscore>50)? "#fff":nonscoreColor;
+		    displayScore.setAttribute("style", "background-image: linear-gradient("+dscore+"deg, transparent 50%, "+scoreColor+" 50%), linear-gradient(90deg, "+nonscoreColor+" 50%, transparent 50%)");
+		}
 
 		// ... look for the keyword 'bestmove' ...
 		if (/bestmove/.test(event.data)) {
@@ -257,19 +264,10 @@ window.onload = function () {
 		// on click: remove feedback element, new turn
 		var enginemove = document.createElement("span");
 		enginemove.id = "enginemove";
-		
+
 		var score = document.createElement("div");
 		score.id = "score";
-		var slice = document.createElement("div");
-		slice.className = "slice";
-		var bar = document.createElement("div");
-		bar.className = "bar";
-		var fill = document.createElement("div");
-		fill.className = "fill";
 
-		slice.appendChild(bar);
-		slice.appendChild(fill);
-		score.appendChild(slice);
 		score.appendChild(enginemove);
 		content.appendChild(score);
 

@@ -18,7 +18,7 @@ body {
 
 #enginemove {
 	text-align: center;
-	line-height: 360px;
+	line-height: 300px;
 	width: 360px;
 }
 
@@ -91,3 +91,4 @@ pre {
 	background-color: white !important;
 	color: #222;
 }
+
