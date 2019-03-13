@@ -15,11 +15,24 @@ window.onload = function () {
     });
 };
 
-	// function to load cookies
-	function getCookieValue(a) {
-		var b = document.cookie.match('(^|;)\\s*' + a + '\\s*=\\s*([^;]+)');
-		return b ? b.pop() : '';
+function save(key, value) {
+	//document.cookie = key+"=" + value;
+	localStorage.setItem(key, value);
+	if(debug){
+		console.log("Saved "+key+": "+value);
 	}
+}
+
+function load(key) {
+	//var b = document.cookie.match('(^|;)\\s*' + a + '\\s*=\\s*([^;]+)');
+	//b = b ? b.pop() : '';
+	var b = localStorage.getItem(key);
+	if(debug){
+		console.log("Loaded "+key+": "+b);
+	}
+	return b;
+}
+
 
 	// set to true for debugging
 	var debug = true;
@@ -35,13 +48,13 @@ window.onload = function () {
 	var chess = new Chess();	
 	
 	// initalize the engine (stockfish.js)
-	var stockfish = new Worker('js/stockfish/src/stockfish.js');
+	var stockfish = new Worker('js/stockfish/src/stockfish.asm.js');
 	stockfish.postMessage("ucinewgame");
 	
 	// read the response of the engine and ...
 	var score=0;
 	stockfish.onmessage = function(event) { 
-		if(debug) { console.log(event.data) };
+		if(debug) { console.log(event.data); }
 		
 		// ... save the current centipawn score (= 1/100 pawn)
 		if (/score cp/.test(event.data)) {
@@ -62,20 +75,28 @@ window.onload = function () {
 		
 		// transform centipawn score to scale between 0 an 100% (tscore) and degree (dscore, see css)
 		var tscore = Math.round(50 + (score * 5));
-		if (tscore<0)    tscore=1;
-		if (tscore>100)  tscore=99;
-		if (score===-99) tscore=0;
-		if (score===99)  tscore=100;
+		if (tscore<0)    { tscore=1;  }
+		if (tscore>100)  { tscore=99; }
+		if (score===-99) { tscore=0;  }
+		if (score===99)  { tscore=100;}
+		
+	    var dscore = 360 * tscore/100;
+		if(debug) { console.log("Current Score: "+score +" (cp), "+tscore+ "(%), ", +dscore+ "(deg)"); }
 
-	          var dscore = 90 + ( 360 * tscore/100 );
-		if(debug) console.log("Current Score: "+score +" (cp), "+tscore+ "(%), ", +dscore+ "(deg)");
 		var displayScore = document.getElementById('score');
-	          if (displayScore) {
-		    var nonscoreColor = "#444";
-		    var scoreColor = (tscore>50)? "#fff":nonscoreColor;
-		    displayScore.setAttribute("style", "background-image: linear-gradient("+dscore+"deg, transparent 50%, "+scoreColor+" 50%), linear-gradient(90deg, "+nonscoreColor+" 50%, transparent 50%)");
+	    if (displayScore) {
+    		var ringColorA = "#fff";
+    		var ringColorB = "#444";
+	    	if (dscore>180) {
+	    		dscore = dscore - 90;
+	    	}
+	    	else {
+	    		dscore = dscore + 90;
+	    		ringColorA = ringColorB;
+	    	}
+		    displayScore.setAttribute("style", "background-image: linear-gradient("+dscore+"deg, transparent 50%, "+ringColorA+" 50%), linear-gradient(90deg, "+ringColorB+" 50%, transparent 50%)");	    		
 		}
-
+		
 		// ... look for the keyword 'bestmove' ...
 		if (/bestmove/.test(event.data)) {
 			/// ... and extract/play it!
@@ -97,10 +118,10 @@ window.onload = function () {
 	// little helper: sort  lexicographically, unless castling/promotion (should come last)
 	function sort_select (a,b) {
 		var r = a.toLowerCase().localeCompare(b.toLowerCase()); 
-		if (a==="=") r=1;
-		if (a==="O") r=1;
-		if (b==="=") r=-1;
-		if (b==="O") r=-1;
+		if (a==="=") { r=1;  }
+		if (a==="O") { r=1;  }
+		if (b==="=") { r=-1; }
+		if (b==="O") { r=-1; }
 		return r;
 	}
 	
@@ -132,8 +153,8 @@ window.onload = function () {
 	// is in the movelist. Returns all moves found.
 	function find_moves(value, key, movelist) {
 		var curmoves = {};
-		for (m in movelist) {
-			if (movelist[m][key] == value) {
+		for (var m in movelist) {
+			if (movelist[m][key] === value) {
 				curmoves[m] = movelist[m];
 			}
 		}
@@ -142,7 +163,7 @@ window.onload = function () {
 	
 	// little helper to print the current already selected elements inside the circle
 	function fill_center(txt) {
-		centerselection = document.createElement("span");
+		var centerselection = document.createElement("span");
 		centerselection.innerHTML = txt;
 		centerselection.classList.add('centerselection');
 		centerselection.addEventListener("click", function () {
@@ -173,17 +194,17 @@ window.onload = function () {
 					"piece": m.slice(0,-2)? m.slice(0,-2):"P", // if empty, it is a pawn move
 				};
 				// exception: castling
-				if (m==="O-O")   { mm = { "file" : "O", "rank": "-O",   "square": m, "piece": "" }};
-				if (m==="O-O-O") { mm = { "file" : "O", "rank": "-O-O", "square": m, "piece": "" }};				
+				if (m==="O-O")   { mm = { "file" : "O", "rank": "-O",   "square": m, "piece": "" };}
+				if (m==="O-O-O") { mm = { "file" : "O", "rank": "-O-O", "square": m, "piece": "" };}				
 				
-				mm["move"] = mm["piece"]+mm["file"]+mm["rank"]; // so find_moves() will find something later
+				mm.move = mm.piece + mm.file + mm.rank; // so find_moves() will find something later
 				curmoves[m] = mm;
 			});
 
 			// provide select-box for file == a)
 			var files = [];
-			for (m in curmoves) {
-				var f = curmoves[m]["file"];
+			for (var m in curmoves) {
+				var f = curmoves[m].file;
 				if (!files.includes(f)) {
 					files.push(f);
 				}
@@ -204,8 +225,8 @@ window.onload = function () {
 				}
 				else {				
 					var ranks = [];
-					for (m in curmoves) {
-						var r = curmoves[m]["rank"];
+					for (var m in curmoves) {
+						var r = curmoves[m].rank;
 						if (!ranks.includes(r)) {
 							ranks.push(r);
 						}
@@ -227,8 +248,8 @@ window.onload = function () {
 						// otherwise, we need to be some more specific
 						else {
 							var pieces = [];
-							for (m in curmoves) {
-								var p = curmoves[m]["piece"];
+							for (var m in curmoves) {
+								var p = curmoves[m].piece;
 								if (!pieces.includes(p)) {
 									pieces.push(p);
 								}
@@ -301,6 +322,8 @@ window.onload = function () {
 	// Little helper: execute one single move
 	function play(move) {
 		chess.move(move, {sloppy: true});
+		// save
+		save("pgn", chess.pgn());
 		fill_debug(move);
 	}
 
@@ -345,9 +368,6 @@ window.onload = function () {
 				turn_engine();
 			}		
 			
-			// save
-			document.cookie = "pgn=" + chess.pgn();
-			document.cookie = "playerColor=" + playerColor;
 		}
 	}
 
@@ -360,13 +380,22 @@ window.onload = function () {
 		var s = document.getElementById('startmenu');
 
 		// little helper: everything is set, now begin with the game
-		function begin(pc){
-			playerColor = pc;  // set playerColor
+		function begin(pc, lvl){
+			playerColor = pc;  // set playerColor			
+			save("playerColor", playerColor);
+			
 			s.remove(); // remove menue
+			// if level is set (because game was loaded)
+			if (lvl) {
+				stockfish.postMessage("setoption name Skill Level value "+ lvl);
+				save("level", lvl);
+				fill_debug(""); // debugging
+				run(); // start the game				
+			}
+			else {
 			/*
 			set difficulty
 			found those elo ratings on the internet, no clue if this maps right. It is some rough idea though...
-			TODO: save and load difficulty for resume game
 				0: 1100
 				1: 1165
 				2: 1230
@@ -392,31 +421,38 @@ window.onload = function () {
 			provide_select(["1","2","3","4","5","6","7","8"], function(){
 				stockfish.postMessage("setoption name Skill Level value "+ this.textContent);
 				select.remove();
+				save("level", this.textContent);
 				fill_debug(""); // debugging
 				run(); // start the game				
 			});
+			
+			select.appendChild(fill_center("lvl"));
+			}
 		}
 			
 		// Box for Load game
 		var l = document.getElementById('lowermenuentry');
 		l.classList.add("chooseLoad");
 		l.innerHTML = "Load";
-		l.addEventListener("click", load);
-		function load(){
-			// Load previously saved (==cookie) game
-			chess.load_pgn(getCookieValue("pgn"), {sloppy:true}); begin(getCookieValue("playerColor"));
+		l.addEventListener("click", load_game);
+		function load_game(){
+			// Load previously saved game
+			var pgn = load("pgn");
+			var plc = load("playerColor");
+			var lvl = load("level");
+						
+			// Tests
+			//plc = "w"; var lvl = "1";
+			// castling
+			//pgn = "1. e4 e6 2. Nf3 d6 3. Bb5+ c6 4. Qe2 f6 5. b4 cxb5 6. Ba3 a6 7. Nc3 Ne7";
+			// en passant
+			//pgn = "1. e4 e6 2. e5 d5";
+			// next move check, then checkmate
+			//pgn = "1. e4 e6 2. Nf3 d6 3. Bb5+ c6 4. Qe2 f6 5. b4 cxb5 6. Ba3 a6 7. Nc3 Ne7 8. Kf1 Nbc6 9. Qxb5 axb5 10. Nd5 exd5 11. Ne5 dxe5 12. Rb1 Rxa3 13. Kg1 Rb3 14. Re1 d4 15. Re2";
+			// promotion
+			//pgn = "1. b4 b5 2. a4 a5 3. axb5 Nc6 4. bxa5 Ne5 5. a6 Rb8 6. a7 Rb6 7. c3 Rh6 8. b6 Rg6 9. b7 Ng4";
 			
-			// Test castling
-			//chess.load_pgn("1. e4 e6 2. Nf3 d6 3. Bb5+ c6 4. Qe2 f6 5. b4 cxb5 6. Ba3 a6 7. Nc3 Ne7", {sloppy:true});begin("w");
-			// Test en passant
-			//chess.load_pgn("1. e4 e6 2. e5 d5", {sloppy:true});begin("w");
-			// Test next move check, then checkmate
-			//chess.load_pgn("1. e4 e6 2. Nf3 d6 3. Bb5+ c6 4. Qe2 f6 5. b4 cxb5 6. Ba3 a6 7. Nc3 Ne7 8. Kf1 Nbc6 9. Qxb5 axb5 10. Nd5 exd5 11. Ne5 dxe5 12. Rb1 Rxa3 13. Kg1 Rb3 14. Re1 d4 15. Re2", {sloppy:true});begin("w");
-			
-			//chess.load_pgn("1. e4 d6 2. d4 Nf6 3. Nc3 e5 4. Nf3 Nbd7 5. a4 a6 6. Bc4 Nb6 7. Bxf7+ Kxf7 8. dxe5 Ne8 9. a5 Be7 10. axb6 dxe5 11. Nxe5+ Kg8 12. O-O Bf6 13. Ng4 Bg5 14. Qe2 Bxc1 15. Raxc1 Qd7 16. Ne3 Qf7 17. f4 h6 18. f5 cxb6 19. e5 Qf8 20. Rcd1 Qb4 21. Ned5 Qc5+ 22. Kh1 Nc7 23. Qh5 Bd7 24. Nf6+ Kf8 25. Nxd7+ Kg8 26. f6 Qxc3 27. fxg7 Qc4 28. Qg6 Qxf1+ 29. Rxf1 Nd5 30. Rf8+ Rxf8", {sloppy:true});begin("w");
-			//chess.load_pgn("1. e4 d6 2. d4 Nf6 3. Nc3 e5 4. Nf3 Nbd7 5. a4 a6 6. Bc4 Nb6 7. Bxf7+ Kxf7 8. dxe5 Ne8 9. a5 Be7 10. axb6 dxe5 11. Nxe5+ Kg8 12. O-O Bf6 13. Ng4 Bg5 14. Qe2 Bxc1 15. Raxc1 Qd7 16. Ne3 Qf7 17. f4 h6 18. f5 cxb6 19. e5 Qf8 20. Rcd1 Qb4 21. Ned5 Qc5+ 22. Kh1 Nc7 23. Qh5 Bd7 24. Nf6+ Kf8 25. Nxd7+ Kg8 26. f6 Qxc3 27. fxg7 Qc4 28. Qg6 Qxf1+ 29. Rxf1 Nd5 30. Rf8+ Rxf8 31. gxh8=Q+ Kxh8 32. Nxf8 Nf6 33. exf6 a5", {sloppy:true});begin("w");
-			// Test promotion
-			//chess.load_pgn("1. b4 b5 2. a4 a5 3. axb5 Nc6 4. bxa5 Ne5 5. a6 Rb8 6. a7 Rb6 7. c3 Rh6 8. b6 Rg6 9. b7 Ng4", {sloppy:true});begin("w");
+			chess.load_pgn(pgn, {sloppy:true}); begin(plc,lvl);
 		}
 		
 		// Box for newGame
@@ -427,7 +463,7 @@ window.onload = function () {
 			
 			// remove event-listener of load game box,
 			// otherwise we have two events fired!
-			l.removeEventListener("click",load);
+			l.removeEventListener("click", load_game);
 
 			// Box for white
 			var w = document.getElementById('uppermenuentry');

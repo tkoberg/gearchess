@@ -1,34 +1,35 @@
 .circle {
     position: relative;
-    width: 280px;
-    height: 280px;
+    width: 260px;
+    height: 260px;
     padding: 0;
-    margin: 0px 0px;
+    margin: 10px 30px;
 }
 .circle li {
     display: block;
     position: absolute;
     top: 50%; left: 50%;
     width: 3px; height: 3px;
-    margin: -10px 0;
+    margin: 0;
 }
-.deg90  { transform: translate(140px); } /* half the width of the wrapper */
-.deg135 { transform: rotate(45deg)  translate(140px) rotate(-45deg); }
-.deg180 { transform: rotate(90deg)  translate(140px) rotate(-90deg); }
-.deg225 { transform: rotate(135deg) translate(140px) rotate(-135deg); }
-.deg270 { transform: translate(-140px); }
-.deg315 { transform: rotate(225deg) translate(140px) rotate(-225deg); }
-.deg360 { transform: rotate(270deg) translate(140px) rotate(-270deg); }
-.deg405 { transform: rotate(315deg) translate(140px) rotate(-315deg); }
-.deg0   { transform: rotate(270deg) translate(140px) rotate(-270deg); }
-.deg45  { transform: rotate(315deg) translate(140px) rotate(-315deg); }
+.deg90  { transform: translate(130px); } /* half the width of the wrapper */
+.deg135 { transform: rotate(45deg)  translate(130px) rotate(-45deg); }
+.deg180 { transform: rotate(90deg)  translate(130px) rotate(-90deg); }
+.deg225 { transform: rotate(135deg) translate(130px) rotate(-135deg); }
+.deg270 { transform: translate(-130px); }
+.deg315 { transform: rotate(225deg) translate(130px) rotate(-225deg); }
+.deg360 { transform: rotate(270deg) translate(130px) rotate(-270deg); }
+.deg405 { transform: rotate(315deg) translate(130px) rotate(-315deg); }
+.deg0   { transform: rotate(270deg) translate(130px) rotate(-270deg); }
+.deg45  { transform: rotate(315deg) translate(130px) rotate(-315deg); }
 
 .degNaN { transform: translate(-10px); } /* for castling in center */
 
 /* for showing first selection in second circle */
 .centerselection {
-    display: block;
-    position: absolute;
-    top: 50%; left: 50%;
+	display: block;
+	text-align: center;
+	line-height: 330px;
+	width: 310px;
 	color: #ccc;
 }
