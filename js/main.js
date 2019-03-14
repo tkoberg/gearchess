@@ -136,6 +136,7 @@ function load(key) {
 		inner.id = "centerselection";
 		inner.classList.add('centerselection');
 		inner.textContent = prefix + suffix;
+		
 		inner.addEventListener("click", onchangefunction);
 		select.appendChild(inner);
 		
@@ -145,7 +146,7 @@ function load(key) {
 			if (currentSelection) {currentSelection.id = ""; }
 			this.id = "selectedSelection"; 
 		};
-		
+	
 		var n = selectlist.length; // number of elements 
 		for(var index in selectlist.sort(sort_select)) {
 			var degree = Math.floor(360/n)*index; 
@@ -186,7 +187,34 @@ function load(key) {
 		}
 		return curmoves;
 	}
-		
+
+	// beside move selection, we might want to have some
+	// other functions in the select menu. Those are defined here
+	// by symbol to be shown and function to be triggered
+	var otherEvents= {
+		back: {  // go back and start selection from the beginning
+			symbol: "&#8617;", 
+			onclick: function() {
+				turn_player();				
+			},
+		},
+		info:{ // Show current PGN
+			symbol: "&#9432;", 
+			onclick: function() {
+					var message = document.createElement("span");
+					message.id = "history";
+					message.innerHTML = chess.pgn({ max_width: 5, newline_char: '<br />' });
+					content.innerHTML = "";
+					content.appendChild(message);
+					// TODO: Scroll using bezel
+					// on click, go back to game
+					message.addEventListener("click", function f(){
+						turn_player();
+					});
+			},
+		},
+	};
+	
 	// Player's turn
 	// Move selection is done in three steps:
 	// a) select file where to move
@@ -224,11 +252,13 @@ function load(key) {
 				}
 			}
 			
+			files.push(otherEvents.back.symbol, otherEvents.info.symbol);
 			provide_select(files, function() {
+				
 				// on change of the select: store file, proceed
 				moveF = document.getElementById('selectedSelection').textContent;
 				select.remove();
-			
+				
 				// third, provide select-box for rank == b), if necessary
 				curmoves = find_moves(moveF, "file", curmoves);
 				
