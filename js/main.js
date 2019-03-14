@@ -115,48 +115,74 @@ function load(key) {
 	}
 	};
 	
-	// little helper: sort  lexicographically, unless castling/promotion (should come last)
-	function sort_select (a,b) {
-		var r = a.toLowerCase().localeCompare(b.toLowerCase()); 
-		if (a==="=") { r=1;  }
-		if (a==="O") { r=1;  }
-		if (b==="=") { r=-1; }
-		if (b==="O") { r=-1; }
+	// little helper: sort  array by key
+	function sortedKeys(keylist) {
+		let r = Object.keys(keylist);
+		r = r.sort();
 		return r;
 	}
 	
+	
 	// provide select-box
 	var select;
-	function provide_select(selectlist, onchangefunction, prefix="", suffix="") {
+	function provide_select(selectlist, initial="", curmoves) {
 		
+		if (debug) { console.log(selectlist); }
 		select = document.createElement("ul");
 		select.classList.add('circle');
 		
 		var inner = document.createElement("span");
 		inner.id = "centerselection";
 		inner.classList.add('centerselection');
-		inner.textContent = prefix + suffix;
-		
-		inner.addEventListener("click", onchangefunction);
+		inner.innerHTML = initial;
 		select.appendChild(inner);
 		
-		function selectThis(){
-			inner.textContent = prefix + this.textContent + suffix;
+		function selectThis(key){
+			if(key in otherEvents) {
+				inner.innerHTML = selectlist[key].symbol;
+			}
+			else {
+				// check if only one move left. Then display this 
+				// instead of file/rank/piece combination!
+				let search = initial + selectlist[key].symbol;
+				let found  = find_moves(search, curmoves);
+				if (Object.keys(found).length===1) {	
+					inner.innerHTML = Object.keys(found)[0];
+				}
+				else {
+					inner.innerHTML = search;
+				}
+				// none found at all? then the position of initial was wrong!
+				if (Object.keys(found).length===0) {
+					search = selectlist[key].symbol + initial;
+					found  = find_moves(search, curmoves);
+					if (Object.keys(found).length===1) {	
+						inner.innerHTML = Object.keys(found)[0];
+					}
+					else {
+						inner.innerHTML = search;
+					}
+				}
+			}
+			inner.addEventListener("click", selectlist[key].onclick);
 			var currentSelection = document.getElementById('selectedSelection');
 			if (currentSelection) {currentSelection.id = ""; }
-			this.id = "selectedSelection"; 
-		};
+			return "selectedSelection";
+		}
 	
-		var n = selectlist.length; // number of elements 
-		for(var index in selectlist.sort(sort_select)) {
-			var degree = Math.floor(360/n)*index; 
+		var n = Object.keys(selectlist).length; // number of elements 
+		let i = 0;
+		for(let key of sortedKeys(selectlist)) {
+			let degree = Math.floor(360/n)*(i++); 
 			degree = degree -90 + ((degree<90)?360:0);
-			var circle_item = document.createElement("li");
+			let circle_item = document.createElement("li");
 			circle_item.classList.add('circle_item');
-			circle_item.innerHTML = selectlist[index];
+			circle_item.innerHTML = selectlist[key].symbol;
 			// should result in e.g.: .deg180 { transform: rotate(90deg)  translate(130px) rotate(-90deg); }
 			circle_item.setAttribute("style", "transform: rotate("+degree+"deg) translate(130px) rotate(-"+degree+"deg);");
-			circle_item.addEventListener("click", selectThis);
+			circle_item.addEventListener("click", function() {
+				this.id = selectThis(key);
+			});
 			select.appendChild(circle_item);
 		}
 		
@@ -170,7 +196,8 @@ function load(key) {
 			var dir = ev.detail.direction;
 			if (dir==="CW")  { index = (index===lindex)?0:(index+1); } // clockwise
 			if (dir==="CCW") { index = (index<=0)? lindex:(index-1); } // counterclockwise
-	        selectThis.apply(listofSelections[index]);
+			let cur = listofSelections[index];
+	        cur.id = selectThis(cur.innerHTML);
 	    });
 		
 		content.appendChild(select); 
@@ -178,14 +205,15 @@ function load(key) {
 	
 	// function to check if a given "move", i.e. file/rank(/piece) combination
 	// is in the movelist. Returns all moves found.
-	function find_moves(value, key, movelist) {
-		var curmoves = {};
+	function find_moves(value, movelist) {
+		let cm = {};
+		let re = RegExp(value);		
 		for (var m in movelist) {
-			if (movelist[m][key] === value) {
-				curmoves[m] = movelist[m];
+			if (re.test(movelist[m].move)) {
+				cm[m] = movelist[m];
 			}
 		}
-		return curmoves;
+		return cm;
 	}
 
 	// beside move selection, we might want to have some
@@ -203,7 +231,7 @@ function load(key) {
 			onclick: function() {
 					var message = document.createElement("span");
 					message.id = "history";
-					message.innerHTML = chess.pgn({ max_width: 5, newline_char: '<br />' });
+					message.innerHTML = "PGN<br/>"+chess.pgn({ max_width: 5, newline_char: '<br />' });
 					content.innerHTML = "";
 					content.appendChild(message);
 					// TODO: Scroll using bezel
@@ -215,15 +243,35 @@ function load(key) {
 		},
 	};
 	
+	
+	// reduce the list of possible moves to only a list of
+	// unique "key"s (e.g., unique files, ranks, or pieces)
+	// and add a function which is executed on click
+	function trimMoves(curmoves, key, fn) {
+		let ret = [];
+		for (var m in curmoves) {
+			let r = curmoves[m][key];
+			if (!(r in ret)) {
+				ret[r] = { 
+					symbol: curmoves[m][key],
+					onclick: fn,
+				};
+			}
+		}
+		return ret;
+	}
+
 	// Player's turn
 	// Move selection is done in three steps:
 	// a) select file where to move
 	// b) select rank where to move
 	// c) select piece to move (optional, only if more than one can move to selection)
 	
-	var moveF, moveR, moveP; // variables to store target square (file/rank/piece)
+	var move; // variables to store target square (file/rank/piece)
 	function turn_player() {
 
+			content.innerHTML = "";
+	
 			// first split up each move into hash containing single elements
 			var curmoves = {};
 			chess.moves().forEach(function(m) {
@@ -244,23 +292,47 @@ function load(key) {
 			});
 
 			// provide select-box for file == a)
-			var files = [];
-			for (var m in curmoves) {
-				var f = curmoves[m].file;
-				if (!files.includes(f)) {
-					files.push(f);
-				}
-			}
+			var files  = trimMoves(curmoves, "file", selectFile);
+			files.info = otherEvents.info; // add info button
+			provide_select(files,"",curmoves);
 			
-			files.push(otherEvents.back.symbol, otherEvents.info.symbol);
-			provide_select(files, function() {
-				
+			function selectPiece(){
+				// on change of the select: go!
+				move = document.getElementById('centerselection').textContent;
+				curmoves = find_moves(move, curmoves);
+				select.remove();
+				play(Object.keys(curmoves)[0]);
+				run();
+			}
+
+			function selectRank(){
+				// on change of the select: store rank, proceed
+				move = document.getElementById('centerselection').textContent;
+				select.remove();
+
+				// now lets try if we are finished
+				curmoves = find_moves(move, curmoves);
+
+				// is this the only move? Then execute
+				if (Object.keys(curmoves).length===1) {	
+					play(Object.keys(curmoves)[0]);
+					run();
+				}
+				// otherwise, we need to be some more specific
+				else {
+					var pieces = trimMoves(curmoves, "piece", selectPiece);
+					pieces.back = otherEvents.back; // add back button
+					provide_select(pieces,move,curmoves);
+				}
+			}	
+			
+			function selectFile() {
 				// on change of the select: store file, proceed
-				moveF = document.getElementById('selectedSelection').textContent;
+				move = document.getElementById('centerselection').textContent;
 				select.remove();
 				
 				// third, provide select-box for rank == b), if necessary
-				curmoves = find_moves(moveF, "file", curmoves);
+				curmoves = find_moves(move, curmoves);
 				
 				// is this the only move? Then execute
 				if (Object.keys(curmoves).length===1) {	
@@ -268,49 +340,11 @@ function load(key) {
 					run();
 				}
 				else {				
-					var ranks = [];
-					for (var m in curmoves) {
-						var r = curmoves[m].rank;
-						if (!ranks.includes(r)) {
-							ranks.push(r);
-						}
-					}
-					
-					provide_select(ranks, function(){
-						// on change of the select: store rank, proceed
-						moveR = document.getElementById('selectedSelection').textContent;
-						select.remove();
-
-						// now lets try if we are finished
-						curmoves = find_moves(moveF+moveR,"square", curmoves);
-
-						// is this the only move? Then execute
-						if (Object.keys(curmoves).length===1) {	
-							play(Object.keys(curmoves)[0]);
-							run();
-						}
-						// otherwise, we need to be some more specific
-						else {
-							var pieces = [];
-							for (var m in curmoves) {
-								var p = curmoves[m].piece;
-								if (!pieces.includes(p)) {
-									pieces.push(p);
-								}
-							}
-
-							provide_select(pieces, function(){
-								// on change of the select: go!
-								moveP = document.getElementById('selectedSelection').textContent;
-								curmoves = find_moves(moveP+moveF+moveR,"move", curmoves);
-								select.remove();
-								play(Object.keys(curmoves)[0]);
-								run();
-							}, "",moveF+moveR);
-						}
-					},moveF);
+					var ranks = trimMoves(curmoves, "rank", selectRank);
+					ranks.back = otherEvents.back; // add back button
+					provide_select(ranks, move, curmoves);
 				}
-			});				
+			}			
 	}
 				
 
@@ -425,12 +459,25 @@ function load(key) {
 			save("playerColor", playerColor);
 			
 			s.remove(); // remove menue
-			// if level is set (because game was loaded)
-			if (lvl) {
-				stockfish.postMessage("setoption name Skill Level value "+ lvl);
-				save("level", lvl);
+
+			// set skill level
+			function selectSkill(){
+				let skill = lvl;
+				let container = document.getElementById('centerselection');
+				if (container) {
+					skill = container.textContent;
+					select.remove();
+				}
+				stockfish.postMessage("setoption name Skill Level value "+ skill);
+				save("level", skill);
 				fill_debug(""); // debugging
 				run(); // start the game				
+			}
+
+			
+			// if level is set (because game was loaded)
+			if (lvl) {
+				selectSkill();
 			}
 			else {
 			/*
@@ -458,14 +505,15 @@ function load(key) {
 				19:2488
 				20:2570
 			*/
-			provide_select(["1","2","3","4","5","6","7","8"], function(){
-				var skill = document.getElementById('selectedSelection').textContent;
-				stockfish.postMessage("setoption name Skill Level value "+ skill);
-				select.remove();
-				save("level", skill);
-				fill_debug(""); // debugging
-				run(); // start the game				
-			}, "L:");
+				var skills = [];
+				for (var i = 1; i <=8; i++) {
+					skills[i] = { 
+						symbol: i,
+						onclick: selectSkill,
+					};
+				}
+
+				provide_select(skills);			
 			}
 		}
 			
@@ -490,7 +538,10 @@ function load(key) {
 			//pgn = "1. e4 e6 2. Nf3 d6 3. Bb5+ c6 4. Qe2 f6 5. b4 cxb5 6. Ba3 a6 7. Nc3 Ne7 8. Kf1 Nbc6 9. Qxb5 axb5 10. Nd5 exd5 11. Ne5 dxe5 12. Rb1 Rxa3 13. Kg1 Rb3 14. Re1 d4 15. Re2";
 			// promotion
 			//pgn = "1. b4 b5 2. a4 a5 3. axb5 Nc6 4. bxa5 Ne5 5. a6 Rb8 6. a7 Rb6 7. c3 Rh6 8. b6 Rg6 9. b7 Ng4";
-			
+			//only 1 move in file b
+			//pgn="1. b4 c5 2. bxc5 d6";
+			// only 1 square in e, but multiple pieces
+			//pgn="1. e4 d5 2. exd5 Qxd5";
 			chess.load_pgn(pgn, {sloppy:true}); begin(plc,lvl);
 		}
 		
