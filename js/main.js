@@ -146,19 +146,15 @@ function load(key) {
 			this.id = "selectedSelection"; 
 		};
 		
-		var n = selectlist.length >8 ? 8 : selectlist.length; // use a maximum of eight elements on circle
+		var n = selectlist.length; // number of elements 
 		for(var index in selectlist.sort(sort_select)) {
-			var degree = Math.floor(360/(n*45))*45*index; 
+			var degree = Math.floor(360/n)*index; 
+			degree = degree -90 + ((degree<90)?360:0);
 			var circle_item = document.createElement("li");
 			circle_item.classList.add('circle_item');
 			circle_item.innerHTML = selectlist[index];
-			// if more than eight (==nine!), place in the middle
-			if (index>=n) {
-				circle_item.classList.add('degNaN');
-			}
-			else {
-				circle_item.classList.add('deg'+degree);
-			}
+			// should result in e.g.: .deg180 { transform: rotate(90deg)  translate(130px) rotate(-90deg); }
+			circle_item.setAttribute("style", "transform: rotate("+degree+"deg) translate(130px) rotate(-"+degree+"deg);");
 			circle_item.addEventListener("click", selectThis);
 			select.appendChild(circle_item);
 		}

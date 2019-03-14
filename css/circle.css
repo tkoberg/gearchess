@@ -1,6 +1,7 @@
 .circle {
     position: relative;
-    width: 260px;
+	/* when changing this, also change circle_item.setAttribute in main.js to half of width/height! */
+    width: 260px; 
     height: 260px;
     padding: 0;
     margin: 10px 30px;
@@ -12,20 +13,8 @@
     width: 3px; height: 3px;
     margin: 0;
 }
-.deg90  { transform: translate(130px); } /* half the width of the wrapper */
-.deg135 { transform: rotate(45deg)  translate(130px) rotate(-45deg); }
-.deg180 { transform: rotate(90deg)  translate(130px) rotate(-90deg); }
-.deg225 { transform: rotate(135deg) translate(130px) rotate(-135deg); }
-.deg270 { transform: translate(-130px); }
-.deg315 { transform: rotate(225deg) translate(130px) rotate(-225deg); }
-.deg360 { transform: rotate(270deg) translate(130px) rotate(-270deg); }
-.deg405 { transform: rotate(315deg) translate(130px) rotate(-315deg); }
-.deg0   { transform: rotate(270deg) translate(130px) rotate(-270deg); }
-.deg45  { transform: rotate(315deg) translate(130px) rotate(-315deg); }
 
-.degNaN { transform: translate(-10px); } /* for castling in center */
-
-/* for showing first selection in second circle */
+/* for showing info in the middle of ring */
 .centerselection {
 	display: block;
 	text-align: center;
