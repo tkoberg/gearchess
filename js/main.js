@@ -127,9 +127,25 @@ function load(key) {
 	
 	// provide select-box
 	var select;
-	function provide_select(selectlist, onchangefunction) {
+	function provide_select(selectlist, onchangefunction, prefix="", suffix="") {
+		
 		select = document.createElement("ul");
 		select.classList.add('circle');
+		
+		var inner = document.createElement("span");
+		inner.id = "centerselection";
+		inner.classList.add('centerselection');
+		inner.textContent = prefix + suffix;
+		inner.addEventListener("click", onchangefunction);
+		select.appendChild(inner);
+		
+		function selectThis(){
+			inner.textContent = prefix + this.textContent + suffix;
+			var currentSelection = document.getElementById('selectedSelection');
+			if (currentSelection) {currentSelection.id = ""; }
+			this.id = "selectedSelection"; 
+		};
+		
 		var n = selectlist.length >8 ? 8 : selectlist.length; // use a maximum of eight elements on circle
 		for(var index in selectlist.sort(sort_select)) {
 			var degree = Math.floor(360/(n*45))*45*index; 
@@ -143,9 +159,23 @@ function load(key) {
 			else {
 				circle_item.classList.add('deg'+degree);
 			}
-			circle_item.addEventListener("click", onchangefunction);
+			circle_item.addEventListener("click", selectThis);
 			select.appendChild(circle_item);
 		}
+		
+		// check if bezel is beeing turned
+		var listofSelections = select.getElementsByTagName("li");
+		var index  = -1; // first index out of range, so turning clockwise will start at 1
+		var lindex = listofSelections.length - 1; // last index
+        
+		// then tag the next/previous element if bezel is turned
+		document.addEventListener('rotarydetent', function(ev) {
+			var dir = ev.detail.direction;
+			if (dir==="CW")  { index = (index===lindex)?0:(index+1); } // clockwise
+			if (dir==="CCW") { index = (index<=0)? lindex:(index-1); } // counterclockwise
+	        selectThis.apply(listofSelections[index]);
+	    });
+		
 		content.appendChild(select); 
 	}
 	
@@ -212,7 +242,7 @@ function load(key) {
 			
 			provide_select(files, function() {
 				// on change of the select: store file, proceed
-				moveF = this.textContent;
+				moveF = document.getElementById('selectedSelection').textContent;
 				select.remove();
 			
 				// third, provide select-box for rank == b), if necessary
@@ -234,7 +264,7 @@ function load(key) {
 					
 					provide_select(ranks, function(){
 						// on change of the select: store rank, proceed
-						moveR = this.textContent;
+						moveR = document.getElementById('selectedSelection').textContent;
 						select.remove();
 
 						// now lets try if we are finished
@@ -257,18 +287,14 @@ function load(key) {
 
 							provide_select(pieces, function(){
 								// on change of the select: go!
-								moveP = this.textContent;
+								moveP = document.getElementById('selectedSelection').textContent;
 								curmoves = find_moves(moveP+moveF+moveR,"move", curmoves);
 								select.remove();
 								play(Object.keys(curmoves)[0]);
 								run();
-							});
-							
-							select.appendChild(fill_center(moveF+moveR)); 
+							}, "",moveF+moveR);
 						}
-					});
-					
-					select.appendChild(fill_center(moveF)); 
+					},moveF);
 				}
 			});				
 	}
@@ -419,14 +445,13 @@ function load(key) {
 				20:2570
 			*/
 			provide_select(["1","2","3","4","5","6","7","8"], function(){
-				stockfish.postMessage("setoption name Skill Level value "+ this.textContent);
+				var skill = document.getElementById('selectedSelection').textContent;
+				stockfish.postMessage("setoption name Skill Level value "+ skill);
 				select.remove();
-				save("level", this.textContent);
+				save("level", skill);
 				fill_debug(""); // debugging
 				run(); // start the game				
-			});
-			
-			select.appendChild(fill_center("lvl"));
+			}, "L:");
 			}
 		}
 			

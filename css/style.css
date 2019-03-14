@@ -92,3 +92,6 @@ pre {
 	color: #222;
 }
 
+#selectedSelection {
+	color: red;
+}
