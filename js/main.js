@@ -190,19 +190,7 @@ function load(key) {
 		}
 		return curmoves;
 	}
-	
-	// little helper to print the current already selected elements inside the circle
-	function fill_center(txt) {
-		var centerselection = document.createElement("span");
-		centerselection.innerHTML = txt;
-		centerselection.classList.add('centerselection');
-		centerselection.addEventListener("click", function () {
-			content.innerHTML = "";
-			turn_player(); // on click, revert selection and start again
-		});
-		return centerselection;
-	}
-	
+		
 	// Player's turn
 	// Move selection is done in three steps:
 	// a) select file where to move
