@@ -136,10 +136,14 @@ function load(key) {
 		inner.classList.add('centerselection');
 		inner.innerHTML = initial;
 		select.appendChild(inner);
-		
+				
 		function selectThis(key){
+			let inner_old = document.getElementById('centerselection');
+			let inner_new = inner_old.cloneNode(true);
+			select.replaceChild(inner_new, inner_old);
+
 			if(key in otherEvents) {
-				inner.innerHTML = selectlist[key].symbol;
+				inner_new.innerHTML = selectlist[key].symbol;
 			}
 			else {
 				// check if only one move left. Then display this 
@@ -147,24 +151,24 @@ function load(key) {
 				let search = initial + selectlist[key].symbol;
 				let found  = find_moves(search, curmoves);
 				if (Object.keys(found).length===1) {	
-					inner.innerHTML = Object.keys(found)[0];
+					inner_new.innerHTML = Object.keys(found)[0];
 				}
 				else {
-					inner.innerHTML = search;
+					inner_new.innerHTML = search;
 				}
 				// none found at all? then the position of initial was wrong!
 				if (Object.keys(found).length===0) {
 					search = selectlist[key].symbol + initial;
 					found  = find_moves(search, curmoves);
 					if (Object.keys(found).length===1) {	
-						inner.innerHTML = Object.keys(found)[0];
+						inner_new.innerHTML = Object.keys(found)[0];
 					}
 					else {
-						inner.innerHTML = search;
+						inner_new.innerHTML = search;
 					}
 				}
 			}
-			inner.addEventListener("click", selectlist[key].onclick);
+			inner_new.addEventListener("click", selectlist[key].onclick);
 			var currentSelection = document.getElementById('selectedSelection');
 			if (currentSelection) {currentSelection.id = ""; }
 			return "selectedSelection";
@@ -192,14 +196,18 @@ function load(key) {
 		var lindex = listofSelections.length - 1; // last index
         
 		// then tag the next/previous element if bezel is turned
-		document.addEventListener('rotarydetent', function(ev) {
-			var dir = ev.detail.direction;
-			if (dir==="CW")  { index = (index===lindex)?0:(index+1); } // clockwise
-			if (dir==="CCW") { index = (index<=0)? lindex:(index-1); } // counterclockwise
-			let cur = listofSelections[index];
-	        cur.id = selectThis(cur.innerHTML);
-	    });
-		
+		function turn_bezel(ev) {
+			let dir = ev.detail.direction;
+			if (dir) { dir = (dir==="CW")?1:-1;	} // Bezel is used
+			else     { dir = ev.deltaY;			} // Mousewheel is used
+			if (dir>0) { index = (index===lindex)?0:(index+1); } // clockwise
+			if (dir<0) { index = (index<=0)? lindex:(index-1); } // counterclockwise
+			let cur = sortedKeys(selectlist)[index];
+	        listofSelections[index].id = selectThis(cur);
+		};
+		select.addEventListener('rotarydetent', function(ev){turn_bezel(ev);});
+		select.addEventListener('wheel',        function(ev){turn_bezel(ev);});
+
 		content.appendChild(select); 
 	}
 	
@@ -248,7 +256,7 @@ function load(key) {
 	// unique "key"s (e.g., unique files, ranks, or pieces)
 	// and add a function which is executed on click
 	function trimMoves(curmoves, key, fn) {
-		let ret = [];
+		let ret = {};
 		for (var m in curmoves) {
 			let r = curmoves[m][key];
 			if (!(r in ret)) {
@@ -292,7 +300,7 @@ function load(key) {
 			});
 
 			// provide select-box for file == a)
-			var files  = trimMoves(curmoves, "file", selectFile);
+			let files  = trimMoves(curmoves, "file", selectFile);
 			files.info = otherEvents.info; // add info button
 			provide_select(files,"",curmoves);
 			
@@ -320,7 +328,7 @@ function load(key) {
 				}
 				// otherwise, we need to be some more specific
 				else {
-					var pieces = trimMoves(curmoves, "piece", selectPiece);
+					let pieces = trimMoves(curmoves, "piece", selectPiece);
 					pieces.back = otherEvents.back; // add back button
 					provide_select(pieces,move,curmoves);
 				}
@@ -340,7 +348,7 @@ function load(key) {
 					run();
 				}
 				else {				
-					var ranks = trimMoves(curmoves, "rank", selectRank);
+					let ranks = trimMoves(curmoves, "rank", selectRank);
 					ranks.back = otherEvents.back; // add back button
 					provide_select(ranks, move, curmoves);
 				}
@@ -505,7 +513,7 @@ function load(key) {
 				19:2488
 				20:2570
 			*/
-				var skills = [];
+				let skills = {};
 				for (var i = 1; i <=8; i++) {
 					skills[i] = { 
 						symbol: i,
@@ -529,9 +537,9 @@ function load(key) {
 			var lvl = load("level");
 						
 			// Tests
-			//plc = "w"; var lvl = "1";
+			plc = "w"; var lvl = "1";
 			// castling
-			//pgn = "1. e4 e6 2. Nf3 d6 3. Bb5+ c6 4. Qe2 f6 5. b4 cxb5 6. Ba3 a6 7. Nc3 Ne7";
+			pgn = "1. e4 e6 2. Nf3 d6 3. Bb5+ c6 4. Qe2 f6 5. b4 cxb5 6. Ba3 a6 7. Nc3 Ne7";
 			// en passant
 			//pgn = "1. e4 e6 2. e5 d5";
 			// next move check, then checkmate
