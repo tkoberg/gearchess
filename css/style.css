@@ -95,3 +95,7 @@ pre {
 #selectedSelection {
 	color: red;
 }
+
+#board {
+	font-size: 18px;
+}

@@ -35,8 +35,7 @@ function load(key) {
 
 
 	// set to true for debugging
-	var debug = true;
-	//var debug = false;
+	var debug = 1;
 	
 	// this is the interact/output element
 	var content = document.getElementById('content');
@@ -169,6 +168,7 @@ function load(key) {
 				}
 			}
 			inner_new.addEventListener("click", selectlist[key].onclick);
+
 			var currentSelection = document.getElementById('selectedSelection');
 			if (currentSelection) {currentSelection.id = ""; }
 			return "selectedSelection";
@@ -181,6 +181,9 @@ function load(key) {
 			degree = degree -90 + ((degree<90)?360:0);
 			let circle_item = document.createElement("li");
 			circle_item.classList.add('circle_item');
+			if (/-O/.test(key)) {
+				circle_item.classList.add('castling');
+			}
 			circle_item.innerHTML = selectlist[key].symbol;
 			// should result in e.g.: .deg180 { transform: rotate(90deg)  translate(130px) rotate(-90deg); }
 			circle_item.setAttribute("style", "transform: rotate("+degree+"deg) translate(130px) rotate(-"+degree+"deg);");
@@ -205,9 +208,9 @@ function load(key) {
 			let cur = sortedKeys(selectlist)[index];
 	        listofSelections[index].id = selectThis(cur);
 		};
-		select.addEventListener('rotarydetent', function(ev){turn_bezel(ev);});
-		select.addEventListener('wheel',        function(ev){turn_bezel(ev);});
-
+		select.addEventListener('wheel',          turn_bezel);
+		document.addEventListener('rotarydetent', turn_bezel);
+		
 		content.appendChild(select); 
 	}
 	
@@ -234,22 +237,48 @@ function load(key) {
 				turn_player();				
 			},
 		},
-		info:{ // Show current PGN
+		info:{ // Show some infos
 			symbol: "&#9432;", 
 			onclick: function() {
-					var message = document.createElement("span");
-					message.id = "history";
-					message.innerHTML = "PGN<br/>"+chess.pgn({ max_width: 5, newline_char: '<br />' });
-					content.innerHTML = "";
-					content.appendChild(message);
-					// TODO: Scroll using bezel
-					// on click, go back to game
-					message.addEventListener("click", function f(){
-						turn_player();
-					});
+						let infos = {
+							pgn: { // show PGN
+								symbol: "pgn",
+								onclick: function(){
+									var message = document.createElement("span");
+									message.id = "history";
+									message.innerHTML = "PGN<br/>"+chess.pgn({ max_width: 5, newline_char: '<br />' });
+									content.innerHTML = "";
+									content.appendChild(message);
+									// TODO: Scroll using bezel
+									// on click, go back to game
+									message.addEventListener("click", function f(){
+										turn_player();
+									});
+								}
+							},
+							board: { // show ASCII board
+								symbol: "board",
+								onclick: function(){
+									var message = document.createElement("span");
+									message.id = "board";
+									message.innerHTML = "<pre>" + chess.ascii() + "</pre>";
+									content.innerHTML = "";
+									content.appendChild(message);
+									// on click, go back to game
+									message.addEventListener("click", function f(){
+										turn_player();
+									});									
+								}
+							},
+						};					
+						content.innerHTML = "";
+						provide_select(infos);
 			},
 		},
 	};
+	
+	
+		
 	
 	
 	// reduce the list of possible moves to only a list of
