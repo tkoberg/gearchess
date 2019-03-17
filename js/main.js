@@ -245,7 +245,7 @@ function load(key) {
 								symbol: '<svg class="icon"><use xlink:href="css/pgn.svg#icon_pgn"></use></svg>',
 								onclick: function(){
 									var message = document.createElement("span");
-									message.id = "history";
+									message.id = "message";
 									message.innerHTML = "PGN<br/>"+chess.pgn({ max_width: 5, newline_char: '<br />' });
 									content.innerHTML = "";
 									content.appendChild(message);
@@ -256,12 +256,11 @@ function load(key) {
 									});
 								}
 							},
-							board: { // show ASCII board
+							board: { // show board
 								symbol: '<svg class="icon"><use xlink:href="css/board.svg#icon_board"></use></svg>',
 								onclick: function(){
 									var message = document.createElement("span");
-									message.id = "board";
-									message.innerHTML = "<pre>" + chess.ascii() + "</pre>";
+									message.innerHTML = renderFen(chess.fen());
 									content.innerHTML = "";
 									content.appendChild(message);
 									// on click, go back to game
@@ -416,7 +415,8 @@ function load(key) {
 		if (debug) {
 			var log = "<pre>" + chess.ascii() + "</pre>";
 			log = log + "<br/>" + "played: " + move;
-			log = log + "<br/>" + "History: " + chess.pgn(); 
+			log = log + "<br/>" + "PGN: " + chess.pgn(); 
+			log = log + "<br/>" + "FEN: " + chess.fen(); 
 			if (chess.in_check()) {
 				log = log + "<br/>" + "Check!"; 
 			}
@@ -449,7 +449,6 @@ function load(key) {
 			message.id = "message";
 			// on click, review the complete game
 			message.addEventListener("click", function f(){
-				message.id = "history";
 				message.innerHTML = chess.pgn({ max_width: 5, newline_char: '<br />' });
 			});
 
@@ -566,9 +565,9 @@ function load(key) {
 			var lvl = load("level");
 						
 			// Tests
-			plc = "w"; var lvl = "1";
+			//plc = "w"; var lvl = "1";
 			// castling
-			pgn = "1. e4 e6 2. Nf3 d6 3. Bb5+ c6 4. Qe2 f6 5. b4 cxb5 6. Ba3 a6 7. Nc3 Ne7";
+			//pgn = "1. e4 e6 2. Nf3 d6 3. Bb5+ c6 4. Qe2 f6 5. b4 cxb5 6. Ba3 a6 7. Nc3 Ne7";
 			// en passant
 			//pgn = "1. e4 e6 2. e5 d5";
 			// next move check, then checkmate
@@ -611,5 +610,33 @@ function load(key) {
 
 	}
 	
+	// translate the fen-string to a html-table containing the unicode-chess-symbols
+	function renderFen(fentxt) {
+		fentxt = fentxt.replace(/ .*/g, '');
+		fentxt = fentxt.replace(/r/g, 'x'); // Convert black rooks to 'x' to avoid mixup with <tr></tr> tags
+		fentxt = fentxt.replace(/\//g, '</tr><tr>');
+		fentxt = fentxt.replace(/1/g, '<td></td>');
+		fentxt = fentxt.replace(/2/g, '<td></td><td></td>');
+		fentxt = fentxt.replace(/3/g, '<td></td><td></td><td></td>');
+		fentxt = fentxt.replace(/4/g, '<td></td><td></td><td></td><td></td>');
+		fentxt = fentxt.replace(/5/g, '<td></td><td></td><td></td><td></td><td></td>');
+		fentxt = fentxt.replace(/6/g, '<td></td><td></td><td></td><td></td><td></td><td></td>');
+		fentxt = fentxt.replace(/7/g, '<td></td><td></td><td></td><td></td><td></td><td></td><td></td>');
+		fentxt = fentxt.replace(/8/g, '<td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>');
+		fentxt = fentxt.replace(/K/g, '<td>&#9812;</td>');
+		fentxt = fentxt.replace(/Q/g, '<td>&#9813;</td>');
+		fentxt = fentxt.replace(/R/g, '<td>&#9814;</td>');
+		fentxt = fentxt.replace(/B/g, '<td>&#9815;</td>');
+		fentxt = fentxt.replace(/N/g, '<td>&#9816;</td>');
+		fentxt = fentxt.replace(/P/g, '<td>&#9817;</td>');
+		fentxt = fentxt.replace(/k/g, '<td>&#9818;</td>');
+		fentxt = fentxt.replace(/q/g, '<td>&#9819;</td>');
+		fentxt = fentxt.replace(/x/g, '<td>&#9820;</td>');
+		fentxt = fentxt.replace(/b/g, '<td>&#9821;</td>');
+		fentxt = fentxt.replace(/n/g, '<td>&#9822;</td>');
+		fentxt = fentxt.replace(/p/g, '<td>&#9823;</td>');
+		return '<table id="board" cellspacing="0" cellpadding="0"><tr>' + fentxt + '</tr></table>';
+	}
+
 	// initalize/setup/start with the game
 	start();

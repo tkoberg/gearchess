@@ -6,11 +6,10 @@
     padding: 0;
     margin: 10px 30px;
 }
-.circle li {
+.circle_item {
     display: block;
     position: absolute;
     top: 50%; left: 50%;
-    width: 3px; height: 3px;
     margin: 0;
 }
 
@@ -21,11 +20,10 @@
 
 /* for showing info in the middle of ring */
 .centerselection {
-	display: block;
-	text-align: center;
-	line-height: 330px;
-	width: 310px;
+	position:absolute;
+    top: 50%; left: 50%;
 	color: #f99527;
-	transform: scale(1.7);
+	transform: scale(1.7) translate(-20%, 0);
 	z-index: 1;
-}
+	margin: auto;
+	}
