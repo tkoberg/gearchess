@@ -35,7 +35,7 @@ function load(key) {
 
 
 	// set to true for debugging
-	var debug = 1;
+	var debug = 0;
 	
 	// this is the interact/output element
 	var content = document.getElementById('content');
@@ -232,17 +232,17 @@ function load(key) {
 	// by symbol to be shown and function to be triggered
 	var otherEvents= {
 		back: {  // go back and start selection from the beginning
-			symbol: "&#8617;", 
+			symbol: '<svg class="icon"><use xlink:href="css/cancel.svg#icon_cancel"></use></svg>',
 			onclick: function() {
 				turn_player();				
 			},
 		},
 		info:{ // Show some infos
-			symbol: "&#9432;", 
+			symbol: '<svg class="icon"><use xlink:href="css/more.svg#icon_more"></use></svg>',
 			onclick: function() {
 						let infos = {
 							pgn: { // show PGN
-								symbol: "pgn",
+								symbol: '<svg class="icon"><use xlink:href="css/pgn.svg#icon_pgn"></use></svg>',
 								onclick: function(){
 									var message = document.createElement("span");
 									message.id = "history";
@@ -257,7 +257,7 @@ function load(key) {
 								}
 							},
 							board: { // show ASCII board
-								symbol: "board",
+								symbol: '<svg class="icon"><use xlink:href="css/board.svg#icon_board"></use></svg>',
 								onclick: function(){
 									var message = document.createElement("span");
 									message.id = "board";

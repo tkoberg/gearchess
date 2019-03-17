@@ -25,6 +25,7 @@
 	text-align: center;
 	line-height: 330px;
 	width: 310px;
-	color: #ccc;
-	font-size: 140%;
+	color: #f99527;
+	transform: scale(1.7);
+	z-index: 1;
 }
