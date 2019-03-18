@@ -328,14 +328,15 @@ function load(key) {
 
 				mm.move = mm.piece + mm.file + mm.rank; // so find_moves() will find something later
 
-			          // exception: promotion
-			          if(/=/.test(m)) {
-				    m = m.slice(0,-1) +"Q"; // only promote to queen
+				// exception: promotion
+				if(/=/.test(m)) {
+					m = m.slice(0,-1)+"Q"; // promote to queen only
 				    var mm = {
 				        "file" : m.slice(-4)[0],
 				        "rank" : m.slice(-3)[0],
 				        "square" : m.slice(-4,-2),
-				        "piece": "=Q", // only promote to queen
+				        "piece": m.slice(0,-4),
+				        "promote": m.slice(-2), // promote to ... (not implemented yet)
 				        "move": m,
 				    };
 				}
@@ -585,22 +586,18 @@ function load(key) {
 			var pgn = load("pgn");
 			var plc = load("playerColor");
 			var lvl = load("level");
+			chess.load_pgn(pgn, {sloppy:true}); begin(plc,lvl);
 						
 			// Tests
-			//plc = "w"; var lvl = "1";
-			// castling
-			//pgn = "1. e4 e6 2. Nf3 d6 3. Bb5+ c6 4. Qe2 f6 5. b4 cxb5 6. Ba3 a6 7. Nc3 Ne7";
-			// en passant
-			//pgn = "1. e4 e6 2. e5 d5";
-			// next move check, then checkmate
-			//pgn = "1. e4 e6 2. Nf3 d6 3. Bb5+ c6 4. Qe2 f6 5. b4 cxb5 6. Ba3 a6 7. Nc3 Ne7 8. Kf1 Nbc6 9. Qxb5 axb5 10. Nd5 exd5 11. Ne5 dxe5 12. Rb1 Rxa3 13. Kg1 Rb3 14. Re1 d4 15. Re2";
-			// promotion
-			//pgn = "1. b4 b5 2. a4 a5 3. axb5 Nc6 4. bxa5 Ne5 5. a6 Rb8 6. a7 Rb6 7. c3 Rh6 8. b6 Rg6 9. b7 Ng4";
-			//only 1 move in file b
-			//pgn="1. b4 c5 2. bxc5 d6";
-			// only 1 square in e, but multiple pieces
-			//pgn="1. e4 d5 2. exd5 Qxd5";
-			chess.load_pgn(pgn, {sloppy:true}); begin(plc,lvl);
+			var fen;
+			//fen="4k3/8/8/8/8/8/8/R3K2R w KQ - 0 1";      // castling
+			//fen="4k3/8/8/3Pp3/8/8/8/4K3 w - e6 0 1";     // en passant
+			//fen="4k3/8/8/8/1r6/r7/7K/8 b - - 0 1";       // next move check, then checkmate
+			//fen="3n3k/P1P5/8/8/8/8/8/7K w - - 0 1";      // promotion
+			//fen="K2n3k/2P1P3/8/8/8/8/8/8 w - - 0 1";     // 2 pawns attack same square&promote (d8)
+			//fen="6rk/8/8/8/8/8/2N5/K7 w - - 0 1";        // only 1 move in file d
+			//fen="7k/8/B7/8/8/R6R/2PKP3/2NQN2K w - - 0 1";// only 1 square in d, but multiple pieces
+			//chess.load(fen); begin("w","1");
 		}
 		
 		// Box for newGame
