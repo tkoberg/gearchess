@@ -392,10 +392,21 @@ function load(key) {
 					play(Object.keys(curmoves)[0]);
 					run();
 				}
-				else {				
+				else {	
 					let ranks = trimMoves(curmoves, "rank", selectRank);
-					ranks.back = otherEvents.back; // add back button
-					provide_select(ranks, move, curmoves);
+					// maybe not the only move, but is there only one rank? 
+					// Then skip rank selection and go directly to piece selection
+					if (Object.keys(ranks).length==1) {
+						move = move + Object.keys(ranks)[0];
+						curmoves = find_moves(move, curmoves);
+						let pieces = trimMoves(curmoves, "piece", selectPiece);
+						pieces.back = otherEvents.back; // add back button
+						provide_select(pieces,move,curmoves);
+					}
+					else {						
+						ranks.back = otherEvents.back; // add back button
+						provide_select(ranks, move, curmoves);
+					}
 				}
 			}			
 	}
