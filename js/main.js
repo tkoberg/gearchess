@@ -131,14 +131,14 @@ function load(key) {
 		
 		var inner = document.createElement("span");
 		inner.id = "centerselection";
-		inner.classList.add('centerselection');
+		inner.classList.add('center');
 		inner.innerHTML = initial;
-		select.appendChild(inner);
+		content.appendChild(inner);
 				
 		function selectThis(key){
 			let inner_old = document.getElementById('centerselection');
 			let inner_new = inner_old.cloneNode(true);
-			select.replaceChild(inner_new, inner_old);
+			content.replaceChild(inner_new, inner_old);
 
 			if(key in otherEvents) {
 				inner_new.innerHTML = selectlist[key].symbol;
@@ -207,7 +207,7 @@ function load(key) {
 			let cur = sortedKeys(selectlist)[index];
 	        listofSelections[index].id = selectThis(cur);
 		};
-		select.addEventListener('wheel',          turn_bezel);
+		document.addEventListener('wheel',          turn_bezel);
 		document.addEventListener('rotarydetent', turn_bezel);
 		
 		content.appendChild(select); 
@@ -243,16 +243,7 @@ function load(key) {
 							pgn: { // show PGN
 								symbol: '<svg class="icon"><use xlink:href="css/pgn.svg#icon_pgn"></use></svg>',
 								onclick: function(){
-									var message = document.createElement("span");
-									message.id = "message";
-									message.innerHTML = "PGN<br/>"+chess.pgn({ max_width: 5, newline_char: '<br />' });
-									content.innerHTML = "";
-									content.appendChild(message);
-									// TODO: Scroll using bezel
-									// on click, go back to game
-									message.addEventListener("click", function f(){
-										turn_player();
-									});
+								    showPGN(turn_player);
 								}
 							},
 							board: { // show board
@@ -277,6 +268,19 @@ function load(key) {
 	
 	
 		
+	// shows the current PGN-History of the game
+	// argument is function to trigger if pgn is clicked
+	function showPGN(fn) {
+	    var message = document.createElement("span");
+	    message.id = "pgn";
+	    message.innerHTML = "PGN<br/>"+chess.pgn({ max_width: 5, newline_char: '<br />' });
+	    content.innerHTML = "";
+	    content.appendChild(message);
+	    // TODO: Scroll using bezel
+
+	    // on click, trigger event
+	    message.addEventListener("click", fn);
+	}
 	
 	
 	// reduce the list of possible moves to only a list of
@@ -335,7 +339,7 @@ function load(key) {
 				// on change of the select: go!
 				move = document.getElementById('centerselection').textContent;
 				curmoves = find_moves(move, curmoves);
-				select.remove();
+				content.innerHTML = "";
 				play(Object.keys(curmoves)[0]);
 				run();
 			}
@@ -343,7 +347,7 @@ function load(key) {
 			function selectRank(){
 				// on change of the select: store rank, proceed
 				move = document.getElementById('centerselection').textContent;
-				select.remove();
+				content.innerHTML = "";
 
 				// now lets try if we are finished
 				curmoves = find_moves(move, curmoves);
@@ -364,7 +368,7 @@ function load(key) {
 			function selectFile() {
 				// on change of the select: store file, proceed
 				move = document.getElementById('centerselection').textContent;
-				select.remove();
+				content.innerHTML = "";
 				
 				// third, provide select-box for rank == b), if necessary
 				curmoves = find_moves(move, curmoves);
@@ -394,12 +398,17 @@ function load(key) {
 		// on click: remove feedback element, new turn
 		var enginemove = document.createElement("span");
 		enginemove.id = "enginemove";
+		enginemove.classList.add('center');
 
 		var score = document.createElement("div");
 		score.id = "score";
 
-		score.appendChild(enginemove);
+		var innerscore = document.createElement("span");
+		innerscore.id = "innerscore";
+
+		score.appendChild(innerscore);
 		content.appendChild(score);
+		content.appendChild(enginemove);
 
 		enginemove.addEventListener("click", function f(){
 			enginemove.removeEventListener("click",f);
@@ -445,10 +454,11 @@ function load(key) {
 		
 			var message = document.createElement("span");
 			content.appendChild(message);
+                              message.classList.add('center');
 			message.id = "message";
 			// on click, review the complete game
 			message.addEventListener("click", function f(){
-				message.innerHTML = chess.pgn({ max_width: 5, newline_char: '<br />' });
+			    showPGN();// do nothing, game is over
 			});
 
 			message.innerHTML = "GameOver!";
@@ -501,7 +511,7 @@ function load(key) {
 				let container = document.getElementById('centerselection');
 				if (container) {
 					skill = container.textContent;
-					select.remove();
+					content.innerHTML = "";
 				}
 				stockfish.postMessage("setoption name Skill Level value "+ skill);
 				save("level", skill);

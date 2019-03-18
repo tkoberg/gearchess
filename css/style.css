@@ -11,30 +11,46 @@ body {
 }
 
 #content {
-	display: flex;
-	display: -webkit-flex;
-	box-sizing: border-box;
-	-webkit-box-sizing: border-box;
 	height:360px;
 	width: 360px;
-	text-align: center;
-	vertical-align: center;
+	position: relative;
 }
 
 #enginemove {
-	text-align: center;
-	line-height: 300px;
 	color: #1aa9bc;
 }
 
-#message {
+#innerscore {
 	text-align: center;
-	width: 100%;
+	line-height: 300px;
+}
+
+#message {
 	font-size: 70%;
 }
 
+#pgn {
+    text-align: center;
+    width: 100%;
+    height:100%;
+    font-size: 30%;
+    display: inline-block;
+}
+
+.center {
+    left:50%;
+    top:50%;
+    /*
+    -webkit-transform: translate(-50%, -50%);
+    -moz-transform: translate(-50%, -50%);
+    */
+    transform: translate(-50%, -50%) scale(1.5);
+    position:absolute;
+    z-index: 1;
+}
+
 .inCheck{
-	color: red !important;
+    color: #84250d !important;
 }
 
 #debug {

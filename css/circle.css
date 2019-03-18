@@ -19,11 +19,6 @@
 }
 
 /* for showing info in the middle of ring */
-.centerselection {
-	position:absolute;
-    top: 50%; left: 50%;
-	color: #f99527;
-	transform: scale(1.7) translate(-20%, 0);
-	z-index: 1;
-	margin: auto;
-	}
+#centerselection {
+    color: #f99527;
+}
