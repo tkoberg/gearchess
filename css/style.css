@@ -5,58 +5,45 @@
 body {
     margin: 0px auto;
     background-color:#222;
+	font-weight:bold;
+	font-size:4em;
+  	color:#fff;
 }
 
-.contents {
+#content {
 	display: flex;
 	display: -webkit-flex;
 	box-sizing: border-box;
 	-webkit-box-sizing: border-box;
 	height:360px;
 	width: 360px;
+	text-align: center;
+	vertical-align: center;
 }
 
 #enginemove {
 	text-align: center;
 	line-height: 300px;
-	width: 360px;
+	color: #1aa9bc;
 }
 
 #message {
 	text-align: center;
-	line-height: 180px;
-	width: 360px;
-}
-
-#history {
-	display: block;
-	text-align: center;
-	width: 360px;
-	font-size: 20px;
-  	color:#fff;
-}
-	
-.content_text {
-	font-weight:bold;
-	/*font-size:5em;*/
-	color:#fff;
+	width: 100%;
+	font-size: 70%;
 }
 
 .inCheck{
 	color: red !important;
 }
 
-#debug, #content{
+#debug {
   	color:#fff;
-}
-
-#content{
-	font-weight:bold;
-	font-size:4em;
+	font-size: 30%;
 }
 
 pre {
-  font-family: Fixedsys,Courier,monospace; 
+  font-family: monospace; 
   padding: 10px;
 }
 
@@ -92,3 +79,31 @@ pre {
 	color: #222;
 }
 
+#selectedSelection {
+	color: #bc6609;
+	fill: #bc6609;
+}
+
+.icon {
+	fill: currentColor;
+	height: 50px;
+	width: 50px;
+}
+
+#board { 
+	color: #222;
+	margin: 60px 70px;
+}
+
+#board td {
+    background:#fff; 
+	text-align:center; 
+	vertical-align:middle; 
+	font-weight: normal;
+	font-size: 20px; height: 30px; width: 30px; /* set minimum cell dimension for empty cells */
+}
+
+#board tr:nth-child(odd) td:nth-child(even),
+#board tr:nth-child(even) td:nth-child(odd) {
+	background:#ccc;
+}
