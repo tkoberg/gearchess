@@ -35,7 +35,7 @@ function load(key) {
 
 
 	// set to true for debugging
-	var debug = 0;
+	var debug = 1;
 	
 	// this is the interact/output element
 	var content = document.getElementById('content');
@@ -325,8 +325,21 @@ function load(key) {
 				// exception: castling
 				if (m==="O-O")   { mm = { "file" : "O", "rank": "-O",   "square": m, "piece": "" };}
 				if (m==="O-O-O") { mm = { "file" : "O", "rank": "-O-O", "square": m, "piece": "" };}				
-				
+
 				mm.move = mm.piece + mm.file + mm.rank; // so find_moves() will find something later
+
+			          // exception: promotion
+			          if(/=/.test(m)) {
+				    m = m.slice(0,-1) +"Q"; // only promote to queen
+				    var mm = {
+				        "file" : m.slice(-4)[0],
+				        "rank" : m.slice(-3)[0],
+				        "square" : m.slice(-4,-2),
+				        "piece": "=Q", // only promote to queen
+				        "move": m,
+				    };
+				}
+
 				curmoves[m] = mm;
 			});
 
