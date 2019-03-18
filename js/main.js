@@ -607,7 +607,7 @@ function load(key) {
 			//fen="3n3k/P1P5/8/8/8/8/8/7K w - - 0 1";      // promotion
 			//fen="K2n3k/2P1P3/8/8/8/8/8/8 w - - 0 1";     // 2 pawns attack same square&promote (d8)
 			//fen="6rk/8/8/8/8/8/2N5/K7 w - - 0 1";        // only 1 move in file d
-			//fen="7k/8/B7/8/8/R6R/2PKP3/2NQN2K w - - 0 1";// only 1 square in d, but multiple pieces
+			//fen="k7/8/B7/8/8/R2p3R/2PKP3/2NQN2K w - - 0 1";// only 1 square in d, but multiple pieces
 			//chess.load(fen); begin("w","1");
 		}
 		
