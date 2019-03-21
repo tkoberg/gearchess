@@ -167,6 +167,15 @@ function load(key) {
 				}
 			}
 			inner_new.addEventListener("click", selectlist[key].onclick);
+			// try to shrink the scale (display size) of the element to its extent (length of string)
+			let innerScale = 1.7;
+			switch (inner_new.innerHTML.length) {
+				case 3: innerScale = 1.5; break;
+				case 4: innerScale = 1.4; break;
+				case 5: innerScale = 1.1; break;
+				case 6: innerScale = 1.0; break;
+			}
+			inner_new.setAttribute("style","--scale:"+ innerScale);
 
 			var currentSelection = document.getElementById('selectedSelection');
 			if (currentSelection) {currentSelection.id = ""; }

@@ -18,6 +18,7 @@ body {
 
 #enginemove {
 	color: #1aa9bc;
+	--scale: 1.5;
 }
 
 #innerscore {
@@ -38,13 +39,12 @@ body {
 }
 
 .center {
-    left:50%;
+	--y: -50%;
+	--x: -50%;
+	--scale: 1;
+    left: 50%;
     top:50%;
-    /*
-    -webkit-transform: translate(-50%, -50%);
-    -moz-transform: translate(-50%, -50%);
-    */
-    transform: translate(-50%, -50%) scale(1.5);
+    transform: translate(var(--x),var(--y)) scale(var(--scale));
     position:absolute;
     z-index: 1;
 }
