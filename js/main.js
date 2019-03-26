@@ -147,9 +147,8 @@ function load(key) {
 		innerStub.classList.add('center');
 
 		var n = Object.keys(selection).length; // number of elements 
-		let i = 0;
-		for(let key of sortedKeys(selection)) {
-			let degree = Math.floor(360/n)*(i++); 
+		sortedKeys(selection).forEach(function (key, i) {
+			let degree = Math.floor(360/n)*(i); 
 			degree = degree -90 + ((degree<90)?360:0);
 
 			let circle_item = document.createElement("li");
@@ -169,7 +168,7 @@ function load(key) {
 			circle_item.setAttribute("style", "transform: rotate("+degree+"deg) translate(130px) rotate(-"+degree+"deg);");
 			circle_item.addEventListener("click", function() { tagSelected(this); });
 			ul.appendChild(circle_item);
-		}
+		});
 		        
 		// tag the next/previous element if bezel is turned
 		document.addEventListener('wheel', turn_bezel);
