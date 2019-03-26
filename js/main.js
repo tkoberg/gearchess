@@ -395,7 +395,7 @@ function load(key) {
 				        "file" : m.slice(-4)[0],
 				        "rank" : m.slice(-3)[0],
 				        "square" : m.slice(-4,-2),
-				        "piece": m.slice(0,-4),
+				        "piece": m[0],
 				        "promote": m.slice(-2), // promote to ... (not implemented yet)
 				        "move": m,
 				    };
