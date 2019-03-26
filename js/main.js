@@ -162,10 +162,14 @@ function load(key) {
 			if (/-O/.test(key)) {
 				circle_item.classList.add('castling');
 			}
+			if (key.length>=2) {
+				circle_item.classList.add('circle_item_wide');
+			}
 
+
+			
 			circle_item.innerHTML = selection[key].symbol;
-			// should result in e.g.: .deg180 { transform: rotate(90deg)  translate(130px) rotate(-90deg); }
-			circle_item.setAttribute("style", "transform: rotate("+degree+"deg) translate(130px) rotate(-"+degree+"deg);");
+			circle_item.setAttribute("style", "--d: "+degree+"deg");
 			circle_item.addEventListener("click", function() { tagSelected(this); });
 			ul.appendChild(circle_item);
 		});
@@ -254,11 +258,12 @@ function load(key) {
 		inner.innerHTML = innerText;
 		
 		// try to shrink the scale (display size) of the element to its extent (length of string)
-		let innerScale = 1.7;
+		let innerScale = 3.0;
 		switch (innerText.length) {
-			case 3: innerScale = 1.5; break;
-			case 4: innerScale = 1.4; break;
-			case 5: innerScale = 1.1; break;
+			case 2: innerScale = 2.5; break;
+			case 3: innerScale = 1.8; break;
+			case 4: innerScale = 1.5; break;
+			case 5: innerScale = 1.2; break;
 			case 6: innerScale = 1.0; break;
 		}
 		inner.setAttribute("style","--scale:"+ innerScale);

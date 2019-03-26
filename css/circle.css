@@ -1,24 +1,39 @@
 .circle {
-    position: relative;
-	/* when changing this, also change circle_item.setAttribute in main.js to half of width/height! */
-    width: 260px; 
-    height: 260px;
+	position: absolute;
+    width: 100%;
+    height: 100%;
     padding: 0;
-    margin: 10px 30px;
+    margin: 0 auto;
+	top: 50%;
+	left: 50%;
+	transform: translateY(-50%) translateX(-50%);
 }
 .circle_item {
-    display: block;
-    position: absolute;
-    top: 50%; left: 50%;
-    margin: 0;
+	position: absolute;
+	list-style-type: none;
+	top: 40%;
+	left: 45%;
+	--d: 0deg;
+	/*         position in ring    size of ring      orientation of item       */
+	transform: rotate(var(--d))    translate(145px)  rotate(calc(-1*var(--d)));
+	margin: 0;
+}
+
+.circle_item_wide {
+	font-size: 50%;
 }
 
 .castling {
-	font-size: 50%;
     margin: 20px -20px !important;
 }
 
 /* for showing info in the middle of ring */
 #centerselection {
     color: #f99527;
+}
+
+/* the currently selected option */
+#selectedSelection {
+	color: #bc6609;
+	fill: #bc6609;
 }
