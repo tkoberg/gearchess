@@ -503,7 +503,7 @@ function load(key) {
 	// Print some debugging
 	function fill_debug(move) {
 		if (debug) {
-			var log = "<pre>" + chess.ascii() + "</pre>";
+			var log = renderFen(chess.fen());
 			log = log + "<br/>" + "played: " + move;
 			log = log + "<br/>" + "PGN: " + chess.pgn(); 
 			log = log + "<br/>" + "FEN: " + chess.fen(); 
@@ -701,7 +701,7 @@ function load(key) {
 	function renderFen(fentxt) {
 		fentxt = fentxt.replace(/ .*/g, '');
 		fentxt = fentxt.replace(/r/g, 'x'); // Convert black rooks to 'x' to avoid mixup with <tr></tr> tags
-		fentxt = fentxt.replace(/\//g, '</tr><tr>');
+		fentxt = fentxt.replace(/\//g, '</tr><tr><td>X</td>'); // 'X' will be replaced with ranknumber later
 		fentxt = fentxt.replace(/1/g, '<td></td>');
 		fentxt = fentxt.replace(/2/g, '<td></td><td></td>');
 		fentxt = fentxt.replace(/3/g, '<td></td><td></td><td></td>');
@@ -722,6 +722,11 @@ function load(key) {
 		fentxt = fentxt.replace(/b/g, '<td>&#9821;</td>');
 		fentxt = fentxt.replace(/n/g, '<td>&#9822;</td>');
 		fentxt = fentxt.replace(/p/g, '<td>&#9823;</td>');
+		fentxt = '<td>X</td>' + fentxt + '</tr><tr><td></td>';
+		for (i = 0; i < 8; i++) {
+			fentxt = fentxt.replace(/X/, (8-i));
+			fentxt = fentxt + '<td>'+(i+10).toString(36)+'</td>';
+		}
 		return '<table id="board" cellspacing="0" cellpadding="0"><tr>' + fentxt + '</tr></table>';
 	}
 
