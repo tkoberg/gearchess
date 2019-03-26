@@ -190,7 +190,7 @@ function load(key) {
 		// get a list of all items and check which one is
 		// currently selected (if none, select the first)
 		let list = document.getElementsByTagName("li");
-		var ci = 0;
+		var ci = -1;
 		for (var i = 0; i < list.length; i++) {
 			 if(list[i].id==="selectedSelection"){
 				ci = i;
