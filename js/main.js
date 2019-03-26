@@ -1,4 +1,7 @@
 
+// set to true for debugging
+var debug = 0;
+
 window.onload = function () {
 
     // TODO:: Do your initialization job
@@ -32,10 +35,6 @@ function load(key) {
 	}
 	return b;
 }
-
-
-	// set to true for debugging
-	var debug = 1;
 	
 	// this is the interact/output element
 	var content = document.getElementById('content');
@@ -43,6 +42,9 @@ function load(key) {
 		content.style.border = '2px solid red'; 
 	}
 
+	// during player's turn, save all selection results in this variable
+	var data = {file:"", rank:"", piece:""};
+	
 	// Chess interaction functions (chess.js); this comes with no engine!
 	var chess = new Chess();	
 	
@@ -119,122 +121,168 @@ function load(key) {
 		r = r.sort();
 		return r;
 	}
-	
+
+	// cleanup display
+	function clean() {
+		document.removeEventListener('wheel', turn_bezel);
+		document.removeEventListener('rotarydetent', turn_bezel);
+		content.innerHTML = "";
+	}
 	
 	// provide select-box
-	var select;
-	function provide_select(selectlist, initial="", curmoves) {
+	// argument 'setkey' assigns the result
+	function provide_select(setkey) {
 		
-		if (debug) { console.log(selectlist); }
-		select = document.createElement("ul");
-		select.classList.add('circle');
-		
-		var inner = document.createElement("span");
-		inner.id = "centerselection";
-		inner.classList.add('center');
-		inner.innerHTML = initial;
-		content.appendChild(inner);
-				
-		function selectThis(key){
-			let inner_old = document.getElementById('centerselection');
-			let inner_new = inner_old.cloneNode(true);
-			content.replaceChild(inner_new, inner_old);
-
-			if(key in otherEvents) {
-				inner_new.innerHTML = selectlist[key].symbol;
-			}
-			else {
-				// check if only one move left. Then display this 
-				// instead of file/rank/piece combination!
-				let search = initial + selectlist[key].symbol;
-				let found  = find_moves(search, curmoves);
-				if (Object.keys(found).length===1) {	
-					inner_new.innerHTML = Object.keys(found)[0];
-				}
-				else {
-					inner_new.innerHTML = search;
-				}
-				// none found at all? then the position of initial was wrong!
-				if (Object.keys(found).length===0) {
-					search = selectlist[key].symbol + initial;
-					found  = find_moves(search, curmoves);
-					if (Object.keys(found).length===1) {	
-						inner_new.innerHTML = Object.keys(found)[0];
-					}
-					else {
-						inner_new.innerHTML = search;
-					}
-				}
-			}
-			inner_new.addEventListener("click", selectlist[key].onclick);
-			// try to shrink the scale (display size) of the element to its extent (length of string)
-			let innerScale = 1.7;
-			switch (inner_new.innerHTML.length) {
-				case 3: innerScale = 1.5; break;
-				case 4: innerScale = 1.4; break;
-				case 5: innerScale = 1.1; break;
-				case 6: innerScale = 1.0; break;
-			}
-			inner_new.setAttribute("style","--scale:"+ innerScale);
-
-			var currentSelection = document.getElementById('selectedSelection');
-			if (currentSelection) {currentSelection.id = ""; }
-			return "selectedSelection";
+		clean();
+		if (debug) { 
+			console.log("selection:"); console.log(selection);
+			console.log("data:"); console.log(data);
 		}
-	
-		var n = Object.keys(selectlist).length; // number of elements 
+		var ul = document.createElement("ul");
+		ul.classList.add('circle');
+
+		// dummy which will be replaced later
+		var innerStub = document.createElement("span");
+		innerStub.id = "centerselection";
+		innerStub.classList.add('center');
+
+		var n = Object.keys(selection).length; // number of elements 
 		let i = 0;
-		for(let key of sortedKeys(selectlist)) {
+		for(let key of sortedKeys(selection)) {
 			let degree = Math.floor(360/n)*(i++); 
 			degree = degree -90 + ((degree<90)?360:0);
+
 			let circle_item = document.createElement("li");
 			circle_item.classList.add('circle_item');
+			if(key in otherEvents) {
+				circle_item.classList.add(key);
+			}
+			else {
+				circle_item.classList.add(setkey);
+			}
 			if (/-O/.test(key)) {
 				circle_item.classList.add('castling');
 			}
-			circle_item.innerHTML = selectlist[key].symbol;
+
+			circle_item.innerHTML = selection[key].symbol;
 			// should result in e.g.: .deg180 { transform: rotate(90deg)  translate(130px) rotate(-90deg); }
 			circle_item.setAttribute("style", "transform: rotate("+degree+"deg) translate(130px) rotate(-"+degree+"deg);");
-			circle_item.addEventListener("click", function() {
-				this.id = selectThis(key);
-			});
-			select.appendChild(circle_item);
+			circle_item.addEventListener("click", function() { tagSelected(this); });
+			ul.appendChild(circle_item);
 		}
-		
-		// check if bezel is beeing turned
-		var listofSelections = select.getElementsByTagName("li");
-		var index  = -1; // first index out of range, so turning clockwise will start at 1
-		var lindex = listofSelections.length - 1; // last index
-        
-		// then tag the next/previous element if bezel is turned
-		function turn_bezel(ev) {
-			let dir = ev.detail.direction;
-			if (dir) { dir = (dir==="CW")?1:-1;	} // Bezel is used
-			else     { dir = ev.deltaY;			} // Mousewheel is used
-			if (dir>0) { index = (index===lindex)?0:(index+1); } // clockwise
-			if (dir<0) { index = (index<=0)? lindex:(index-1); } // counterclockwise
-			let cur = sortedKeys(selectlist)[index];
-	        listofSelections[index].id = selectThis(cur);
-		};
-		document.addEventListener('wheel',          turn_bezel);
+		        
+		// tag the next/previous element if bezel is turned
+		document.addEventListener('wheel', turn_bezel);
 		document.addEventListener('rotarydetent', turn_bezel);
 		
-		content.appendChild(select); 
+		content.appendChild(ul); 
+		content.appendChild(innerStub); 
+	}
+
+	// this happens when the bezel/mouse-wheel is turned: 
+	// next/previous element in list is tagged
+	function turn_bezel(ev) {
+		
+		let dir = ev.detail.direction;
+		if (dir) { dir = (dir==="CW")?1:-1;	} // Bezel is used
+		else     { dir = ev.deltaY;			} // Mousewheel is used
+
+		// get a list of all items and check which one is
+		// currently selected (if none, select the first)
+		let list = document.getElementsByTagName("li");
+		var ci = 0;
+		for (var i = 0; i < list.length; i++) {
+			 if(list[i].id==="selectedSelection"){
+				ci = i;
+			}
+		}
+		
+		// change to which direction?
+		if (dir>0) { ci = (ci===(list.length-1))?0:(ci+1); } // clockwise
+		if (dir<0) { ci = (ci<=0)? (list.length-1):(ci-1); } // counterclockwise
+						
+		// tag the selected element
+		tagSelected(list[ci]);
+	}
+	
+	// tag (i.e. focus on) the currently selected list element
+	function tagSelected(el) {
+		
+		// untag the currently selected element
+		var currentSelection = document.getElementById('selectedSelection');
+		if (currentSelection) {currentSelection.id = ""; }
+
+		el.id="selectedSelection";
+				
+		// the key is usually the content, but in case of otherEvents,
+		// it is a svg! So we take the array-key instead
+		var key = el.innerHTML;
+		let isIcon = false;
+		for (var k in otherEvents) {
+			if (el.classList.contains(k)) {
+				key = k;
+				isIcon = true;
+			}
+		}
+
+		// clone the inner element (we have to overwrite it!)
+		let inner_old = document.getElementById('centerselection');
+		let inner     = inner_old.cloneNode(true);
+		content.replaceChild(inner, inner_old);
+		
+		// add the provided event listener
+		inner.addEventListener("click", selection[key].onclick);
+				
+		// try to make the inner text more informational
+		let innerText = key;
+		if(isIcon) {
+			innerText = otherEvents[key].symbol;
+		}
+		else {
+			if (el.classList.contains("file"))  { data.file  = key; }
+			if (el.classList.contains("rank"))  { data.rank  = key; }
+			if (el.classList.contains("piece")) { data.piece = key; }
+			// check if only one move left. Then display this 
+			// instead of file/rank/piece combination!
+			let found  = find_moves(curmoves);
+			if (Object.keys(found).length===1) { 
+				innerText = Object.keys(found)[0];	
+			}
+			else if (Object.keys(found).length>1) {
+				innerText = data.piece + data.file + data.rank;
+			}
+		}
+		inner.innerHTML = innerText;
+		
+		// try to shrink the scale (display size) of the element to its extent (length of string)
+		let innerScale = 1.7;
+		switch (innerText.length) {
+			case 3: innerScale = 1.5; break;
+			case 4: innerScale = 1.4; break;
+			case 5: innerScale = 1.1; break;
+			case 6: innerScale = 1.0; break;
+		}
+		inner.setAttribute("style","--scale:"+ innerScale);
+		
+		content.appendChild(inner);
 	}
 	
 	// function to check if a given "move", i.e. file/rank(/piece) combination
 	// is in the movelist. Returns all moves found.
-	function find_moves(value, movelist) {
-		let cm = {};
-		let re = RegExp(value);		
-		for (var m in movelist) {
-			if (re.test(movelist[m].move)) {
-				cm[m] = movelist[m];
+	function find_moves(movelist) {
+		let cm = JSON.parse(JSON.stringify( movelist )); // deep copy of movelist
+		for (var i in cm) {
+			if (
+				(data.file!==""  && data.file!==cm[i].file) ||
+				(data.rank!==""  && data.rank!==cm[i].rank) ||
+				(data.piece!=="" && data.piece!==cm[i].piece)
+			){ 
+				delete cm[i]; 
 			}
 		}
 		return cm;
 	}
-
+	
 	// beside move selection, we might want to have some
 	// other functions in the select menu. Those are defined here
 	// by symbol to be shown and function to be triggered
@@ -248,30 +296,29 @@ function load(key) {
 		info:{ // Show some infos
 			symbol: '<svg class="icon"><use xlink:href="css/more.svg#icon_more"></use></svg>',
 			onclick: function() {
-						let infos = {
-							pgn: { // show PGN
-								symbol: '<svg class="icon"><use xlink:href="css/pgn.svg#icon_pgn"></use></svg>',
-								onclick: function(){
-								    showPGN(turn_player);
-								}
-							},
-							board: { // show board
-								symbol: '<svg class="icon"><use xlink:href="css/board.svg#icon_board"></use></svg>',
-								onclick: function(){
-									var message = document.createElement("span");
-									message.innerHTML = renderFen(chess.fen());
-									content.innerHTML = "";
-									content.appendChild(message);
-									// on click, go back to game
-									message.addEventListener("click", function f(){
-										turn_player();
-									});									
-								}
-							},
-						};					
-						content.innerHTML = "";
-						provide_select(infos);
+				content.innerHTML = "";
+				selection = {back: otherEvents.back, pgn: otherEvents.pgn, board: otherEvents.board};
+				provide_select("info");
 			},
+		},
+		pgn: { // show PGN
+			symbol: '<svg class="icon"><use xlink:href="css/pgn.svg#icon_pgn"></use></svg>',
+			onclick: function(){
+				showPGN(turn_player);
+			}
+		},
+		board: { // show board
+			symbol: '<svg class="icon"><use xlink:href="css/board.svg#icon_board"></use></svg>',
+			onclick: function(){
+				var message = document.createElement("span");
+				message.innerHTML = renderFen(chess.fen());
+				content.innerHTML = "";
+				content.appendChild(message);
+				// on click, go back to game
+				message.addEventListener("click", function f(){
+				turn_player();
+				});									
+			}
 		},
 	};
 	
@@ -314,14 +361,15 @@ function load(key) {
 	// a) select file where to move
 	// b) select rank where to move
 	// c) select piece to move (optional, only if more than one can move to selection)
-	
-	var move; // variables to store target square (file/rank/piece)
+	var curmoves = {};
+	var selection;
 	function turn_player() {
 
-			content.innerHTML = "";
+			clean();
+			data = {file:"", rank:"", piece:""};
 	
 			// first split up each move into hash containing single elements
-			var curmoves = {};
+			curmoves = {};
 			chess.moves().forEach(function(m) {
 				m = m.replace('+','');  // remove check mark '+'
 				m = m.replace('#','');  // remove checkmate mark '#'
@@ -329,18 +377,17 @@ function load(key) {
 					"file" : m.slice(-2)[0],
 					"rank" : m.slice(-1),
 					"square" : m.slice(-2),
-					"piece": m.slice(0,-2)? m.slice(0,-2):"P", // if empty, it is a pawn move
+					"piece": m[0] + ((m.length>3 && m[1]!=="x") ? m[1] : ""), // second letter might also be necessary to identify piece
+					"move": m
 				};
 				// exception: castling
 				if (m==="O-O")   { mm = { "file" : "O", "rank": "-O",   "square": m, "piece": "" };}
 				if (m==="O-O-O") { mm = { "file" : "O", "rank": "-O-O", "square": m, "piece": "" };}				
 
-				mm.move = mm.piece + mm.file + mm.rank; // so find_moves() will find something later
-
 				// exception: promotion
 				if(/=/.test(m)) {
 					m = m.slice(0,-1)+"Q"; // promote to queen only
-				    var mm = {
+				    mm = {
 				        "file" : m.slice(-4)[0],
 				        "rank" : m.slice(-3)[0],
 				        "square" : m.slice(-4,-2),
@@ -354,14 +401,13 @@ function load(key) {
 			});
 
 			// provide select-box for file == a)
-			let files  = trimMoves(curmoves, "file", selectFile);
-			files.info = otherEvents.info; // add info button
-			provide_select(files,"",curmoves);
+			selection  = trimMoves(curmoves, "file", selectFile);
+			selection.info = otherEvents.info; // add info button
+			provide_select("file");
 			
 			function selectPiece(){
 				// on change of the select: go!
-				move = document.getElementById('centerselection').textContent;
-				curmoves = find_moves(move, curmoves);
+				curmoves = find_moves(curmoves);
 				content.innerHTML = "";
 				play(Object.keys(curmoves)[0]);
 				run();
@@ -369,52 +415,50 @@ function load(key) {
 
 			function selectRank(){
 				// on change of the select: store rank, proceed
-				move = document.getElementById('centerselection').textContent;
-				content.innerHTML = "";
 
 				// now lets try if we are finished
-				curmoves = find_moves(move, curmoves);
-
+				curmoves = find_moves(curmoves);
 				// is this the only move? Then execute
+				content.innerHTML = "";
 				if (Object.keys(curmoves).length===1) {	
 					play(Object.keys(curmoves)[0]);
 					run();
 				}
 				// otherwise, we need to be some more specific
 				else {
-					let pieces = trimMoves(curmoves, "piece", selectPiece);
-					pieces.back = otherEvents.back; // add back button
-					provide_select(pieces,move,curmoves);
+					selection = trimMoves(curmoves, "piece", selectPiece);
+					selection.back = otherEvents.back; // add back button
+					provide_select("piece");
 				}
 			}	
 			
 			function selectFile() {
 				// on change of the select: store file, proceed
-				move = document.getElementById('centerselection').textContent;
 				content.innerHTML = "";
-				
-				// third, provide select-box for rank == b), if necessary
-				curmoves = find_moves(move, curmoves);
-				
+
+				// provide select-box for rank == b), if necessary
+				curmoves = find_moves(curmoves);
 				// is this the only move? Then execute
 				if (Object.keys(curmoves).length===1) {	
 					play(Object.keys(curmoves)[0]);
 					run();
 				}
 				else {	
-					let ranks = trimMoves(curmoves, "rank", selectRank);
+					selection = trimMoves(curmoves, "rank", selectRank);
+
 					// maybe not the only move, but is there only one rank? 
 					// Then skip rank selection and go directly to piece selection
-					if (Object.keys(ranks).length==1) {
-						move = move + Object.keys(ranks)[0];
-						curmoves = find_moves(move, curmoves);
-						let pieces = trimMoves(curmoves, "piece", selectPiece);
-						pieces.back = otherEvents.back; // add back button
-						provide_select(pieces,move,curmoves);
+					if (Object.keys(selection).length===1) {
+						curmoves = find_moves(curmoves);
+
+						selection = trimMoves(curmoves, "piece", selectPiece);
+						selection.back = otherEvents.back; // add back button
+						provide_select("piece");
 					}
 					else {						
-						ranks.back = otherEvents.back; // add back button
-						provide_select(ranks, move, curmoves);
+						selection.back = otherEvents.back; // add back button
+						curmoves = find_moves(curmoves);
+						provide_select("rank");
 					}
 				}
 			}			
@@ -584,15 +628,15 @@ function load(key) {
 				19:2488
 				20:2570
 			*/
-				let skills = {};
+				selection = {};
 				for (var i = 1; i <=8; i++) {
-					skills[i] = { 
+					selection[i] = { 
 						symbol: i,
 						onclick: selectSkill,
 					};
 				}
 
-				provide_select(skills);			
+				provide_select("skills");			
 			}
 		}
 			
