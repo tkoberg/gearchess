@@ -365,7 +365,7 @@ function load(key) {
 			},
 		},
 		options:{ // Show some infos
-			symbol: iconize('toggle_on'),
+			symbol: iconize('options'),
 			onclick: function() {
 				let opt = document.createElement("ul");
 				opt.id = "menu";
