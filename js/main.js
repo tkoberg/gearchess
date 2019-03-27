@@ -357,7 +357,17 @@ function load(key) {
 			onclick: function() {
 				let message = document.createElement("span");
 				message.id = "highscore";
-				message.innerHTML = "Highscore<br/>not implemented yet";
+				let m = "Highscore<br/>";
+				let l = load('lost_games') || 0;
+				let d = load('draw_games') || 0;
+				let w = load('won_games')  || 0;
+				//let p = Math.round((w/(l+d+w))*100);
+				let p = Math.round(100*w/(1*l+1*d+1*w));
+				m = m +"Lost: "+ l + "<br/>";
+				m = m +"Draw: "+ d + "<br/>";
+				m = m +"Won: " + w + "<br/>";
+				m = m +"= "+ p + "%<br/>";
+				message.innerHTML = m;
 				content.innerHTML = "";
 				content.appendChild(message);
 				// on click, back to main menu
@@ -611,7 +621,10 @@ function load(key) {
 
 	// play one turn
 	function run() {
-		
+
+		// is it the player's turn?
+		let playersTurn = (chess.turn() === playerColor);
+	
 		// only proceed if it is not game-over yet!
 		if(chess.game_over()) {
 		
@@ -628,22 +641,27 @@ function load(key) {
 			// 1) checkmate?
 			if(chess.in_checkmate()) {
 				message.innerHTML = "Check-mate!";
+				if(playersTurn) { let g = load('lost_games') || 0; save('lost_games',++g); }
+				else            { let g = load('won_games')  || 0; save('won_games', ++g); }
 			}
 
 			// 2) stalemate?
 			if(chess.in_stalemate()) {
 				message.innerHTML = "Stale-mate!";
+				if(playersTurn) { let g = load('lost_games') || 0; save('lost_games',++g); }
+				else            { let g = load('won_games')  || 0; save('won_games', ++g); }
 			}
 
 			// 3) draw?
 			if(chess.in_draw() || chess.in_threefold_repetition()) {
 				message.innerHTML = "Draw!";
+				let g = load('draw_games') || 0; save('draw_games', ++g);
 			}		
 		}
 		else { // not yet game-over
 			
 			// play the side on turn
-			if (chess.turn() === playerColor) {
+			if (playersTurn) {
 				turn_player();
 			}
 			else {
