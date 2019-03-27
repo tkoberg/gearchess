@@ -286,7 +286,27 @@ function load(key) {
 		}
 		return cm;
 	}
-	
+
+
+	// provide some options to toggle on/off
+	var options = {
+		hint: {  // show pondering as a hint
+			note:   'show hint',
+			set:    false,
+			fixed: true,
+		},
+		score: {  // show current imbalance of game
+			note:   'show score',
+			set:    true,
+			fixed: false,
+		},
+		queenpromote: {  // always promote to queen
+			note:   'promote to queen',
+			set:    true,
+			fixed: true,
+		},
+	};
+		
 	// beside move selection, we might want to have some
 	// other functions in the select menu. Those are defined here
 	// by symbol to be shown and function to be triggered
@@ -301,7 +321,7 @@ function load(key) {
 			symbol: '<svg class="icon"><use xlink:href="css/more.svg#icon_more"></use></svg>',
 			onclick: function() {
 				content.innerHTML = "";
-				selection = {back: otherEvents.back, pgn: otherEvents.pgn, board: otherEvents.board};
+				selection = {back: otherEvents.back, pgn: otherEvents.pgn, board: otherEvents.board, highscore: otherEvents.highscore, options: otherEvents.options};
 				provide_select("info");
 			},
 		},
@@ -324,6 +344,58 @@ function load(key) {
 				});									
 			}
 		},
+		highscore: {  // show wins and losses
+			symbol: '<svg class="icon"><use xlink:href="css/highscore.svg#icon_highscore"></use></svg>',
+			onclick: function() {
+				let message = document.createElement("span");
+				message.id = "highscore";
+				message.innerHTML = "Highscore<br/>not implemented yet";
+				content.innerHTML = "";
+				content.appendChild(message);
+				// on click, back to main menu
+				message.addEventListener("click", turn_player);
+			},
+		},
+		options:{ // Show some infos
+			symbol: '<svg class="icon"><use xlink:href="css/toggle_on.svg#icon_toggle_on"></use></svg>',
+			onclick: function() {
+				let opt = document.createElement("ul");
+				opt.id = "menu";
+				opt.classList.add('settingsList');
+		
+				Object.keys(options).forEach(function (key, i) {
+					let state = (options[key].set)? "on": "off"; // current state: on or off?
+
+					let o  = document.createElement("li");
+
+					let ot = document.createElement("span");
+					ot.classList.add('settingsText');
+					ot.innerHTML = options[key].note;
+
+					let oo = document.createElement("span");
+					oo.innerHTML = '<svg class="toggle toggle'+state+'"><use xlink:href="css/toggle_'+state+'.svg#icon_toggle_'+state+'"></use></svg>';
+					if (!options[key].fixed) {
+						o.addEventListener("click", function() {
+							options[key].set = !options[key].set;
+							state = (options[key].set)? "on": "off";
+							oo.innerHTML = '<svg class="toggle toggle'+state+'"><use xlink:href="css/toggle_'+state+'.svg#icon_toggle_'+state+'"></use></svg>';
+						});
+					}
+					o.appendChild(ot);
+					o.appendChild(oo);
+					opt.appendChild(o);
+				});
+		
+				let back = document.createElement("li");
+				back.addEventListener("click", turn_player);
+				//back.addEventListener("click", otherEvents.info.onclick); // or just go back to info menu?
+				back.innerHTML = otherEvents.back.symbol;
+				opt.appendChild(back);
+
+				content.innerHTML = "";
+				content.appendChild(opt);
+			},
+		},
 	};
 	
 	
@@ -341,8 +413,7 @@ function load(key) {
 	    // on click, trigger event
 	    message.addEventListener("click", fn);
 	}
-	
-	
+
 	// reduce the list of possible moves to only a list of
 	// unique "key"s (e.g., unique files, ranks, or pieces)
 	// and add a function which is executed on click
@@ -489,7 +560,9 @@ function load(key) {
 		innerscore.id = "innerscore";
 
 		score.appendChild(innerscore);
-		content.appendChild(score);
+		if (options.score.set) {
+			content.appendChild(score);
+		}
 		content.appendChild(enginemove);
 
 		enginemove.addEventListener("click", function f(){

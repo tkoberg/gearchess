@@ -96,6 +96,33 @@ pre {
 	width: 50px;
 }
 
+.settingsList {
+	list-style-type: none;
+	font-size: 20px;
+	width: 80%;
+}
+
+.settingsText {
+	width: 80%;
+	float: left;
+	line-height: 50px;
+	text-align: left;
+}
+
+.toggle {
+	height: 50px;
+	width: 50px;
+	vertical-align: middle;
+}
+
+.toggleoff {
+	fill: #444;
+}
+
+.toggleon {
+	fill: #fff;
+}
+
 #board { 
 	color: #222;
 	margin: 60px 40px;
