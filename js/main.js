@@ -287,6 +287,14 @@ function load(key) {
 		return cm;
 	}
 
+	// little wrapper to ease creation of icons
+	function iconize(icon) {
+		let s = document.createElement("svg");
+		s.classList.add('icon');
+		s.classList.add(icon);
+		s.innerHTML = '<use xlink:href="css/'+icon+'.svg#icon_'+icon+'"></use>';
+		return s.outerHTML;
+	}
 
 	// provide some options to toggle on/off
 	var options = {
@@ -312,13 +320,13 @@ function load(key) {
 	// by symbol to be shown and function to be triggered
 	var otherEvents= {
 		back: {  // go back and start selection from the beginning
-			symbol: '<svg class="icon"><use xlink:href="css/cancel.svg#icon_cancel"></use></svg>',
+			symbol: iconize('cancel'),
 			onclick: function() {
 				turn_player();				
 			},
 		},
 		info:{ // Show some infos
-			symbol: '<svg class="icon"><use xlink:href="css/more.svg#icon_more"></use></svg>',
+			symbol: iconize('more'),
 			onclick: function() {
 				content.innerHTML = "";
 				selection = {back: otherEvents.back, pgn: otherEvents.pgn, board: otherEvents.board, highscore: otherEvents.highscore, options: otherEvents.options};
@@ -326,13 +334,13 @@ function load(key) {
 			},
 		},
 		pgn: { // show PGN
-			symbol: '<svg class="icon"><use xlink:href="css/pgn.svg#icon_pgn"></use></svg>',
+			symbol: iconize('pgn'),
 			onclick: function(){
 				showPGN(turn_player);
 			}
 		},
 		board: { // show board
-			symbol: '<svg class="icon"><use xlink:href="css/board.svg#icon_board"></use></svg>',
+			symbol: iconize('board'),
 			onclick: function(){
 				var message = document.createElement("span");
 				message.innerHTML = renderFen(chess.fen());
@@ -345,7 +353,7 @@ function load(key) {
 			}
 		},
 		highscore: {  // show wins and losses
-			symbol: '<svg class="icon"><use xlink:href="css/highscore.svg#icon_highscore"></use></svg>',
+			symbol: iconize('highscore'),
 			onclick: function() {
 				let message = document.createElement("span");
 				message.id = "highscore";
@@ -357,7 +365,7 @@ function load(key) {
 			},
 		},
 		options:{ // Show some infos
-			symbol: '<svg class="icon"><use xlink:href="css/toggle_on.svg#icon_toggle_on"></use></svg>',
+			symbol: iconize('toggle_on'),
 			onclick: function() {
 				let opt = document.createElement("ul");
 				opt.id = "menu";
@@ -373,12 +381,12 @@ function load(key) {
 					ot.innerHTML = options[key].note;
 
 					let oo = document.createElement("span");
-					oo.innerHTML = '<svg class="toggle toggle'+state+'"><use xlink:href="css/toggle_'+state+'.svg#icon_toggle_'+state+'"></use></svg>';
+					oo.innerHTML = iconize('toggle_'+state);
 					if (!options[key].fixed) {
 						o.addEventListener("click", function() {
 							options[key].set = !options[key].set;
 							state = (options[key].set)? "on": "off";
-							oo.innerHTML = '<svg class="toggle toggle'+state+'"><use xlink:href="css/toggle_'+state+'.svg#icon_toggle_'+state+'"></use></svg>';
+							oo.innerHTML = iconize('toggle_'+state);
 						});
 					}
 					o.appendChild(ot);

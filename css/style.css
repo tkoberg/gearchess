@@ -115,11 +115,11 @@ pre {
 	vertical-align: middle;
 }
 
-.toggleoff {
+.toggle_off {
 	fill: #444;
 }
 
-.toggleon {
+.toggle_on {
 	fill: #fff;
 }
 
