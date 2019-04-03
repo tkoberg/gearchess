@@ -43,7 +43,8 @@ function load(key) {
 	}
 
 	// during player's turn, save all selection results in this variable
-	var data = {file:"", rank:"", piece:""};
+	// initalize player's color to white and engine skill level to 1
+	var data = {file:"", rank:"", piece:"", color:"w", skill:"1"};
 	
 	// Chess interaction functions (chess.js); this comes with no engine!
 	var chess = new Chess();	
@@ -63,14 +64,14 @@ function load(key) {
 			score = score/100; // normalize (usual way to display)
 			// if player is white, engine is black, so score must be inverted, because:
 			// score cp == "the score from the engine's point of view in centipawns"
-			if (playerColor === "w") { 
+			if (data.color === "w") { 
 				score = -score;
 			}
 		}
 		// ... or mate
 		if (/mate/.test(event.data)) {
 			score = event.data.match(/mate (\S+)/)[1];
-			if ( (score>0 && playerColor === "w") || (score<0 && playerColor === "b") ) { score = -99; }
+			if ( (score>0 && data.color === "w") || (score<0 && data.color === "b") ) { score = -99; }
 			else { score = 99; }
 		}
 		
@@ -127,6 +128,30 @@ function load(key) {
 		document.removeEventListener('wheel', turn_bezel);
 		document.removeEventListener('rotarydetent', turn_bezel);
 		content.innerHTML = "";
+	}
+
+	// provide dichotome menu
+	function provide_menu(optionA, optionB) {
+		clean();
+		var m = document.createElement("ul");
+		var a = document.createElement("li");
+		var b = document.createElement("li");
+		
+		m.classList.add("startmenu");
+		a.classList.add("menuentry");
+		b.classList.add("menuentry");
+		a.classList.add("upperMenu");
+		b.classList.add("lowerMenu");
+
+		a.innerHTML = optionA.symbol;
+		b.innerHTML = optionB.symbol;
+
+		a.addEventListener("click", optionA.onclick);
+		b.addEventListener("click", optionB.onclick);
+
+		m.appendChild(a);
+		m.appendChild(b);
+		content.appendChild(m);
 	}
 	
 	// provide select-box
@@ -245,6 +270,7 @@ function load(key) {
 			if (el.classList.contains("file"))  { data.file  = key; }
 			if (el.classList.contains("rank"))  { data.rank  = key; }
 			if (el.classList.contains("piece")) { data.piece = key; }
+			if (el.classList.contains("skill")) { data.skill = key; }
 			// check if only one move left. Then display this 
 			// instead of file/rank/piece combination!
 			let found  = find_moves(curmoves);
@@ -414,8 +440,90 @@ function load(key) {
 				content.appendChild(opt);
 			},
 		},
+		newGame: {
+			symbol: "New",
+			onclick: function(){ provide_menu(otherEvents.chooseWhite, otherEvents.chooseBlack); }
+		},
+		loadGame: { // Load previously saved game
+			symbol: "Load",
+			onclick: function(){
+				data.color = load("playerColor");
+				data.skill = load("skill");
+				let pgn = load("pgn");
+				chess.load_pgn(pgn, {sloppy:true});
+						
+				// Tests
+				var fen;
+				//fen="4k3/8/8/8/8/8/8/R3K2R w KQ - 0 1";      // castling
+				//fen="4k3/8/8/3Pp3/8/8/8/4K3 w - e6 0 1";     // en passant
+				//fen="4k3/8/8/8/1r6/r7/7K/8 b - - 0 1";       // next move check, then checkmate
+				//fen="3n3k/P1P5/8/8/8/8/8/7K w - - 0 1";      // promotion
+				//fen="K2n3k/2P1P3/8/8/8/8/8/8 w - - 0 1";     // 2 pawns attack same square&promote (d8)
+				//fen="6rk/8/8/8/8/8/2N5/K7 w - - 0 1";        // only 1 move in file d
+				fen="k7/8/B7/8/8/R2p3R/2PKP3/2NQN2K w - - 0 1";// only 1 square in d, but multiple pieces
+				//chess.load(fen); data.color = "w";
+				
+				clean();
+				fill_debug(""); // debugging
+				run(); // start the game
+			}
+		},
+		chooseWhite: {
+			symbol: "White",
+			onclick: function() {setColor("w")}
+		},
+		chooseBlack: {
+			symbol: "Black",
+			onclick: function() {setColor("b")}
+		},
+
 	};
 	
+	function setColor(color) {
+		data.color = color;
+		save("playerColor", data.color);
+		clean();
+		/* 
+		set difficulty/skill of engine
+		found those elo ratings on the internet, no clue if this maps right. It is some rough idea though...
+		0: 1100
+		1: 1165
+		2: 1230
+		3: 1295
+		4: 1360
+		5: 1425
+		6: 1490
+		7: 1555
+		8: 1620
+		9: 1685
+		10:1750
+		11:1832
+		12:1914
+		13:1996
+		14:2078
+		15:2160
+		16:2242
+		17:2324
+		18:2406
+		19:2488
+		20:2570
+		*/
+		selection = {};
+		for (var i = 1; i <=8; i++) {
+			selection[i] = { 
+				symbol: i,
+				onclick: function() {
+					if (debug) { console.log("set skill to: "+data.skill); }
+					stockfish.postMessage("setoption name Skill Level value "+ data.skill);
+					save("skill", data.skill);
+					clean();
+					fill_debug(""); // debugging
+					run(); // start the game
+				},
+			};
+		}
+		provide_select("skill");			
+	}
 	
 		
 	// shows the current PGN-History of the game
@@ -459,8 +567,8 @@ function load(key) {
 	function turn_player() {
 
 			clean();
-			data = {file:"", rank:"", piece:""};
-	
+			data = {file:"", rank:"", piece:"", color:data.color, skill:data.skill};
+			
 			// first split up each move into hash containing single elements
 			curmoves = {};
 			chess.moves().forEach(function(m) {
@@ -623,7 +731,7 @@ function load(key) {
 	function run() {
 
 		// is it the player's turn?
-		let playersTurn = (chess.turn() === playerColor);
+		let playersTurn = (chess.turn() === data.color);
 	
 		// only proceed if it is not game-over yet!
 		if(chess.game_over()) {
@@ -670,131 +778,6 @@ function load(key) {
 			
 		}
 	}
-
-	
-	// Begin the game. Either choose white or black, 
-	// or load a previously interrupted game.
-	var playerColor = "w"; //initialize playerColor with white
-	function start() {
-
-		var s = document.getElementById('startmenu');
-
-		// little helper: everything is set, now begin with the game
-		function begin(pc, lvl){
-			playerColor = pc;  // set playerColor			
-			save("playerColor", playerColor);
-			
-			s.remove(); // remove menue
-
-			// set skill level
-			function selectSkill(){
-				let skill = lvl;
-				let container = document.getElementById('centerselection');
-				if (container) {
-					skill = container.textContent;
-					content.innerHTML = "";
-				}
-				stockfish.postMessage("setoption name Skill Level value "+ skill);
-				save("level", skill);
-				fill_debug(""); // debugging
-				run(); // start the game				
-			}
-
-			
-			// if level is set (because game was loaded)
-			if (lvl) {
-				selectSkill();
-			}
-			else {
-			/*
-			set difficulty
-			found those elo ratings on the internet, no clue if this maps right. It is some rough idea though...
-				0: 1100
-				1: 1165
-				2: 1230
-				3: 1295
-				4: 1360
-				5: 1425
-				6: 1490
-				7: 1555
-				8: 1620
-				9: 1685
-				10:1750
-				11:1832
-				12:1914
-				13:1996
-				14:2078
-				15:2160
-				16:2242
-				17:2324
-				18:2406
-				19:2488
-				20:2570
-			*/
-				selection = {};
-				for (var i = 1; i <=8; i++) {
-					selection[i] = { 
-						symbol: i,
-						onclick: selectSkill,
-					};
-				}
-
-				provide_select("skills");			
-			}
-		}
-			
-		// Box for Load game
-		var l = document.getElementById('lowermenuentry');
-		l.classList.add("chooseLoad");
-		l.innerHTML = "Load";
-		l.addEventListener("click", load_game);
-		function load_game(){
-			// Load previously saved game
-			var pgn = load("pgn");
-			var plc = load("playerColor");
-			var lvl = load("level");
-			chess.load_pgn(pgn, {sloppy:true}); begin(plc,lvl);
-						
-			// Tests
-			var fen;
-			//fen="4k3/8/8/8/8/8/8/R3K2R w KQ - 0 1";      // castling
-			//fen="4k3/8/8/3Pp3/8/8/8/4K3 w - e6 0 1";     // en passant
-			//fen="4k3/8/8/8/1r6/r7/7K/8 b - - 0 1";       // next move check, then checkmate
-			//fen="3n3k/P1P5/8/8/8/8/8/7K w - - 0 1";      // promotion
-			//fen="K2n3k/2P1P3/8/8/8/8/8/8 w - - 0 1";     // 2 pawns attack same square&promote (d8)
-			//fen="6rk/8/8/8/8/8/2N5/K7 w - - 0 1";        // only 1 move in file d
-			//fen="k7/8/B7/8/8/R2p3R/2PKP3/2NQN2K w - - 0 1";// only 1 square in d, but multiple pieces
-			//chess.load(fen); begin("w","1");
-		}
-		
-		// Box for newGame
-		var n = document.getElementById('uppermenuentry');
-		n.classList.add("chooseNG");
-		n.innerHTML = "New";
-		n.addEventListener("click", function (){
-			
-			// remove event-listener of load game box,
-			// otherwise we have two events fired!
-			l.removeEventListener("click", load_game);
-
-			// Box for white
-			var w = document.getElementById('uppermenuentry');
-			w.classList.add("chooseWhite");
-			w.innerHTML = "White";
-			w.addEventListener("click", function(){
-					begin("w");
-			});
-
-			// Box for black
-			var b = document.getElementById('lowermenuentry');
-			b.classList.add("chooseBlack");
-			b.innerHTML = "Black";
-			b.addEventListener("click", function(){
-					begin("b");
-			});
-		});
-
-	}
 	
 	// translate the fen-string to a html-table containing the unicode-chess-symbols
 	function renderFen(fentxt) {
@@ -830,4 +813,4 @@ function load(key) {
 	}
 
 	// initalize/setup/start with the game
-	start();
+	provide_menu(otherEvents.newGame, otherEvents.loadGame);
