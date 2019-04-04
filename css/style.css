@@ -24,9 +24,6 @@ body {
 	--scale: 1.5;
 }
 
-#innerscore {
-}
-
 #message {
 	font-size: 70%;
 }
@@ -56,6 +53,12 @@ body {
 #debug {
   	color:#fff;
 	font-size: 30%;
+	width: 1440px;
+}
+
+.debugItem {
+	width: 50%;
+	display: inline;
 }
 
 pre {
@@ -90,7 +93,7 @@ pre {
 
 .settingsList {
 	list-style-type: none;
-	font-size: 20px;
+	font-size: 15px;
 	width: 80%;
 }
 
@@ -113,30 +116,4 @@ pre {
 
 .toggle_on {
 	fill: #fff;
-}
-
-#board { 
-	color: #222;
-	margin: 60px 40px;
-}
-
-#board td {
-    background:#fff; 
-	text-align:center; 
-	vertical-align:middle; 
-	font-weight: normal;
-	font-size: 20px; height: 30px; width: 30px; /* set minimum cell dimension for empty cells */
-}
-
-#board tr:nth-child(odd) td:nth-child(odd),
-#board tr:nth-child(even) td:nth-child(even) {
-	background:#ccc;
-}
-
-#board tr td:first-child,
-#board tr:last-child td {
-	background-color: #222 !important;
-	color: #fff;
-	font-size: 16px;
-	font-weight: bold;
 }

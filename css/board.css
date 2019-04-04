@@ -1,0 +1,44 @@
+
+#board { 
+	color: #222;
+	border-collapse: collapse;
+}
+
+#board td {
+    background:#fff; 
+	text-align:center; 
+	vertical-align:middle; 
+	font-weight: normal;
+	font-size: 20px; height: 30px; width: 30px; /* set minimum cell dimension for empty cells */
+	border: 2px solid Gray; 
+}
+
+#board tr:nth-child(odd) td:nth-child(odd),
+#board tr:nth-child(even) td:nth-child(even) {
+	background:#ccc;
+}
+
+#board tr td:first-child,
+#board tr:last-child td {
+	background-color: #222 !important;
+	color: #fff;
+	font-size: 16px;
+	font-weight: bold;
+	border: none;
+}
+
+#board td.highlightedSquare {
+	background-color: #f99527 !important;
+}
+
+.singleBoard {
+	margin: 60px 40px;
+}
+
+
+.engineMoveBoard {
+	z-index: 3;
+	position:absolute;
+    transform: scale(0.5);
+
+}

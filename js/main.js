@@ -1,6 +1,6 @@
 
 // set to true for debugging
-var debug = 0;
+var debug = 1;
 
 window.onload = function () {
 
@@ -41,6 +41,9 @@ function load(key) {
 	if (debug) {
 		content.style.border = '2px solid red'; 
 	}
+
+	// for debugging
+	var debug = document.getElementById('debug');
 
 	// during player's turn, save all selection results in this variable
 	// initalize player's color to white and engine skill level to 1
@@ -105,7 +108,7 @@ function load(key) {
 			play(move);
 			// also, send this to the output-window 
 			// TODO: how to write this to variable instead inside element??
-			enginemove.innerHTML= move;
+			enginemove.innerHTML = move;
 			// are we in check?
 			if(chess.in_check()) {
 				content.classList.add('inCheck');
@@ -335,10 +338,16 @@ function load(key) {
 			fixed: false,
 		},
 		queenpromote: {  // always promote to queen
-			note:   'promote to queen',
+			note:   'always promote to queen',
 			set:    true,
 			fixed: true,
 		},
+		alwaysShowBoard: {  // always show the board after the engine moved
+			note:   'show board after turn',
+			set:    true,
+			fixed: false,
+		},
+		
 	};
 		
 	// beside move selection, we might want to have some
@@ -368,14 +377,12 @@ function load(key) {
 		board: { // show board
 			symbol: iconize('board'),
 			onclick: function(){
-				var message = document.createElement("span");
-				message.innerHTML = renderFen(chess.fen());
-				content.innerHTML = "";
-				content.appendChild(message);
+				clean();
+				let b = buildBoard(chess.fen(), data.lastmove);
+				b.classList.add('singleBoard');					
 				// on click, go back to game
-				message.addEventListener("click", function f(){
-				turn_player();
-				});									
+				b.addEventListener("click", function (){ turn_player(); });									
+				content.appendChild(b);
 			}
 		},
 		highscore: {  // show wins and losses
@@ -567,7 +574,7 @@ function load(key) {
 	function turn_player() {
 
 			clean();
-			data = {file:"", rank:"", piece:"", color:data.color, skill:data.skill};
+			data = {file:"", rank:"", piece:"", color:data.color, skill:data.skill, lastmove: data.lastmove};
 			
 			// first split up each move into hash containing single elements
 			curmoves = {};
@@ -685,16 +692,26 @@ function load(key) {
 		var innerscore = document.createElement("span");
 		innerscore.id = "innerscore";
 
-		score.appendChild(innerscore);
+			score.appendChild(innerscore);
 		if (options.score.set) {
 			content.appendChild(score);
 		}
 		content.appendChild(enginemove);
-
+		
 		enginemove.addEventListener("click", function f(){
 			enginemove.removeEventListener("click",f);
-			content.innerHTML = "";
-			run();
+			data.lastmove = enginemove.innerHTML;
+			if (options.alwaysShowBoard.set) {
+				clean();
+				let b = buildBoard(chess.fen(), data.lastmove);
+				b.classList.add('singleBoard');					
+				// on click, go back to game
+				b.addEventListener("click", function (){ run(); });									
+				content.appendChild(b);			
+			}
+			else {
+				run();
+			}
 		});
 
 	}
@@ -702,20 +719,36 @@ function load(key) {
 	// Print some debugging
 	function fill_debug(move) {
 		if (debug) {
-			var log = renderFen(chess.fen());
-			log = log + "<br/>" + "played: " + move;
-			log = log + "<br/>" + "PGN: " + chess.pgn(); 
-			log = log + "<br/>" + "FEN: " + chess.fen(); 
+			debug.innerHTML="";
+			
+			// board
+			let b = buildBoard(chess.fen(), move);
+			
+			// some messages
+			let l = document.createElement("div"); 
+			var log = "played [" + move + "], ";
+			log = log + "   FEN: [" + chess.fen() + "]";
 			if (chess.in_check()) {
-				log = log + "<br/>" + "Check!"; 
+				log = log + " Check!"; 
 			}
 			if (chess.in_checkmate()) {
-				log = log + "<br/>" + "Checkmate!"; 
+				log = log + " Checkmate!"; 
 			}
 			if (chess.in_stalemate()) {
-				log = log + "<br/>" + "Stalemate!"; 
+				log = log  + " Stalemate!"; 
 			}
-			document.getElementById('debug').innerHTML= log;
+			l.innerHTML = log;
+			
+			// PGN
+			let p = document.createElement("div");
+			p.innerHTML = chess.pgn(); 
+			
+			b.classList.add('debugItem');
+			p.classList.add('debugItem');
+			
+			debug.appendChild(l);
+			debug.appendChild(b);
+			debug.appendChild(p);
 		}
 	}
  	
@@ -779,8 +812,10 @@ function load(key) {
 		}
 	}
 	
-	// translate the fen-string to a html-table containing the unicode-chess-symbols
-	function renderFen(fentxt) {
+	// translate the fen-string to a html-table containing the unicode-chess-symbols.
+	// also, highlight the last move on the board (lastmove should be something like "d7d6")
+	function buildBoard(fentxt, lastmove) {
+		// construct table out of fen
 		fentxt = fentxt.replace(/ .*/g, '');
 		fentxt = fentxt.replace(/r/g, 'x'); // Convert black rooks to 'x' to avoid mixup with <tr></tr> tags
 		fentxt = fentxt.replace(/\//g, '</tr><tr><td>X</td>'); // 'X' will be replaced with ranknumber later
@@ -809,8 +844,29 @@ function load(key) {
 			fentxt = fentxt.replace(/X/, (8-i));
 			fentxt = fentxt + '<td>'+(i+10).toString(36)+'</td>';
 		}
-		return '<table id="board" cellspacing="0" cellpadding="0"><tr>' + fentxt + '</tr></table>';
+		let b = document.createElement("table");
+		b.id = "board";
+		b.cellSpacing = "0";
+		b.cellPadding = "0";
+		b.innerHTML = '<tr>' + fentxt + '</tr>';
+		
+		// add highlighting of last move
+		if(lastmove && lastmove.length===4){ 
+			let alph = ["a", "b", "c", "d", "e", "f", "g", "h"];
+			let f1 = alph.indexOf(lastmove[0])+1;
+			let f2 = 8-lastmove[1];
+			let t1 = alph.indexOf(lastmove[2])+1;
+			let t2 = 8-lastmove[3];
+			if (!(isNaN(f1) || isNaN(f2) || isNaN(t1) || isNaN(t2))) {
+				let tdf = b.getElementsByTagName('tr')[f2].getElementsByTagName('td')[f1];
+				let tdt = b.getElementsByTagName('tr')[t2].getElementsByTagName('td')[t1];
+				tdf.classList.add('highlightedSquare');
+				tdt.classList.add('highlightedSquare');
+			}
+		}
+		
+		return b;
 	}
-
+	
 	// initalize/setup/start with the game
 	provide_menu(otherEvents.newGame, otherEvents.loadGame);
