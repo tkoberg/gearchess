@@ -1,6 +1,6 @@
 
 // set to true for debugging
-var debug = 1;
+var debug = 0;
 
 window.onload = function () {
 
@@ -43,7 +43,7 @@ function load(key) {
 	}
 
 	// for debugging
-	var debug = document.getElementById('debug');
+	var debugDiv = document.getElementById('debug');
 
 	// during player's turn, save all selection results in this variable
 	// initalize player's color to white and engine skill level to 1
@@ -344,7 +344,7 @@ function load(key) {
 		},
 		alwaysShowBoard: {  // always show the board after the engine moved
 			note:   'show board after turn',
-			set:    true,
+			set:   false,
 			fixed: false,
 		},
 		
@@ -719,7 +719,7 @@ function load(key) {
 	// Print some debugging
 	function fill_debug(move) {
 		if (debug) {
-			debug.innerHTML="";
+			debugDiv.innerHTML="";
 			
 			// board
 			let b = buildBoard(chess.fen(), move);
@@ -746,9 +746,9 @@ function load(key) {
 			b.classList.add('debugItem');
 			p.classList.add('debugItem');
 			
-			debug.appendChild(l);
-			debug.appendChild(b);
-			debug.appendChild(p);
+			debugDiv.appendChild(l);
+			debugDiv.appendChild(b);
+			debugDiv.appendChild(p);
 		}
 	}
  	
