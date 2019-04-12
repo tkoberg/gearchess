@@ -119,10 +119,19 @@ function load(key) {
 	}
 	};
 	
-	// little helper: sort  array by key
+	// little helper: sort array by key
 	function sortedKeys(keylist) {
 		let r = Object.keys(keylist);
 		r = r.sort();
+		// always sort "back" at ...
+		['back'].forEach(function (bg) {
+			let i = r.indexOf(bg);
+			if (i>-1) {
+				r.splice(i, 1);
+				//r.unshift(bg); // ... the beginning
+				r.push(bg); // ... the end
+			}
+		});
 		return r;
 	}
 
@@ -176,7 +185,7 @@ function load(key) {
 
 		var n = Object.keys(selection).length; // number of elements 
 		sortedKeys(selection).forEach(function (key, i) {
-			let degree = Math.floor(360/n)*(i); 
+			let degree = Math.floor(360/10)*(i); 
 			degree = degree -90 + ((degree<90)?360:0);
 
 			let circle_item = document.createElement("li");
@@ -467,7 +476,7 @@ function load(key) {
 				//fen="3n3k/P1P5/8/8/8/8/8/7K w - - 0 1";      // promotion
 				//fen="K2n3k/2P1P3/8/8/8/8/8/8 w - - 0 1";     // 2 pawns attack same square&promote (d8)
 				//fen="6rk/8/8/8/8/8/2N5/K7 w - - 0 1";        // only 1 move in file d
-				fen="k7/8/B7/8/8/R2p3R/2PKP3/2NQN2K w - - 0 1";// only 1 square in d, but multiple pieces
+				//fen="k7/8/B7/8/8/R2p3R/2PKP3/2NQN2K w - - 0 1";// only 1 square in d, but multiple pieces
 				//chess.load(fen); data.color = "w";
 				
 				clean();
@@ -477,11 +486,11 @@ function load(key) {
 		},
 		chooseWhite: {
 			symbol: "White",
-			onclick: function() {setColor("w")}
+			onclick: function() { setColor("w"); }
 		},
 		chooseBlack: {
 			symbol: "Black",
-			onclick: function() {setColor("b")}
+			onclick: function() { setColor("b"); }
 		},
 
 	};
@@ -516,7 +525,7 @@ function load(key) {
 		20:2570
 		*/
 		selection = {};
-		for (var i = 1; i <=8; i++) {
+		for (var i = 1; i <=9; i++) {
 			selection[i] = { 
 				symbol: i,
 				onclick: function() {
@@ -840,7 +849,7 @@ function load(key) {
 		fentxt = fentxt.replace(/n/g, '<td>&#9822;</td>');
 		fentxt = fentxt.replace(/p/g, '<td>&#9823;</td>');
 		fentxt = '<td>X</td>' + fentxt + '</tr><tr><td></td>';
-		for (i = 0; i < 8; i++) {
+		for (var i = 0; i < 8; i++) {
 			fentxt = fentxt.replace(/X/, (8-i));
 			fentxt = fentxt + '<td>'+(i+10).toString(36)+'</td>';
 		}
