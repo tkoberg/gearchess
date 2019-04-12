@@ -9,7 +9,7 @@
 	text-align:center; 
 	vertical-align:middle; 
 	font-weight: normal;
-	font-size: 20px; height: 30px; width: 30px; /* set minimum cell dimension for empty cells */
+	font-size: 18px; height: 25px; width: 25px; /* set minimum cell dimension for empty cells */
 	border: 2px solid Gray; 
 }
 
@@ -22,7 +22,7 @@
 #board tr:last-child td {
 	background-color: #222 !important;
 	color: #fff;
-	font-size: 16px;
+	font-size: 12px;
 	font-weight: bold;
 	border: none;
 }
@@ -32,7 +32,9 @@
 }
 
 .singleBoard {
-	margin: 60px 40px;
+	position: relative;
+	top: 18%;
+	left: 15%;
 }
 
 

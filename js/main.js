@@ -39,7 +39,7 @@ function load(key) {
 	// this is the interact/output element
 	var content = document.getElementById('content');
 	if (debug) {
-		content.style.border = '2px solid red'; 
+		content.classList.add('debug');
 	}
 
 	// for debugging
@@ -195,12 +195,12 @@ function load(key) {
 			}
 			else {
 				circle_item.classList.add(setkey);
-			}
-			if (/-O/.test(key)) {
-				circle_item.classList.add('castling');
-			}
-			if (key.length>=2) {
-				circle_item.classList.add('circle_item_wide');
+				if (/-O/.test(key)) {
+					circle_item.classList.add('castling');
+				}
+				if (key.length>=2) {
+					circle_item.classList.add('circle_item_wide');
+				}
 			}
 
 
@@ -433,7 +433,7 @@ function load(key) {
 			onclick: function() {
 				let opt = document.createElement("ul");
 				opt.id = "menu";
-				opt.classList.add('settingsList');
+				opt.classList.add('optionsList');
 		
 				Object.keys(options).forEach(function (key, i) {
 					let state = (options[key].set)? "on": "off"; // current state: on or off?
@@ -441,10 +441,11 @@ function load(key) {
 					let o  = document.createElement("li");
 
 					let ot = document.createElement("span");
-					ot.classList.add('settingsText');
+					ot.classList.add('optionsText');
 					ot.innerHTML = options[key].note;
 
 					let oo = document.createElement("span");
+					oo.classList.add('optionsToggle');
 					oo.innerHTML = iconize('toggle_'+state);
 					if (!options[key].fixed) {
 						o.addEventListener("click", function() {
@@ -453,15 +454,16 @@ function load(key) {
 							oo.innerHTML = iconize('toggle_'+state);
 						});
 					}
-					o.appendChild(ot);
 					o.appendChild(oo);
+					o.appendChild(ot);
 					opt.appendChild(o);
 				});
 		
 				let back = document.createElement("li");
 				back.addEventListener("click", turn_player);
 				//back.addEventListener("click", otherEvents.info.onclick); // or just go back to info menu?
-				back.innerHTML = otherEvents.back.symbol;
+				back.innerHTML = 'save and go back to menu';
+				back.setAttribute("style", "margin-left: 60px");
 				opt.appendChild(back);
 
 				content.innerHTML = "";

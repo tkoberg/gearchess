@@ -28,12 +28,19 @@ body {
 	font-size: 70%;
 }
 
-#pgn, #highscore {
+#pgn, .optionsList {
 	margin-top: 10%;
     text-align: center;
 	height: 100%;
     font-size: 30%;
     display: inline-block;
+}
+
+#highscore {
+	padding-top: 20%;
+    text-align: center;
+    font-size: 60%;
+    display: block
 }
 
 .center {
@@ -56,6 +63,11 @@ body {
 	width: 1440px;
 }
 
+.debug {
+	border-radius: 50%;
+	border: 5px solid red;
+}
+  
 .debugItem {
 	width: 50%;
 	display: inline;
@@ -91,23 +103,23 @@ pre {
 	width: 50px;
 }
 
-.settingsList {
+.optionsList {
 	list-style-type: none;
 	font-size: 15px;
 	width: 80%;
-}
-
-.settingsText {
-	width: 80%;
-	float: left;
-	line-height: 50px;
 	text-align: left;
 }
 
-.toggle {
-	height: 50px;
-	width: 50px;
+.optionsText {
+	padding-left: 10px;
+	line-height: 50px;
+	display: inline-block;	
+}
+
+.optionsToggle {
+	display: inline-block;
 	vertical-align: middle;
+	width: 50px;
 }
 
 .toggle_off {
