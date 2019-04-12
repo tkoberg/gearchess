@@ -217,6 +217,7 @@ function load(key) {
 		
 		content.appendChild(ul); 
 		content.appendChild(innerStub); 
+		tagSelected(document.getElementsByTagName("li")[0]);
 	}
 
 	// this happens when the bezel/mouse-wheel is turned: 
