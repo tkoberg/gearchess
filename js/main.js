@@ -370,11 +370,27 @@ function load(key) {
 				turn_player();				
 			},
 		},
+		undo: {  // undo the last move
+			symbol: iconize('undo'),
+			onclick: function(){ 
+				provide_menu(
+					{   symbol: 'undo', // execute undo
+					    onclick: function() {
+						chess.undo(); // undo engines last move
+						data.lastmove = "";
+						chess.undo(); // undo players last move
+						showBoard(turn_player);
+					},
+					},
+					{ symbol: 'do not', onclick: function() {turn_player} }// step back from the undo
+				)
+			}
+		},
 		info:{ // Show some infos
 			symbol: iconize('more'),
 			onclick: function() {
 				content.innerHTML = "";
-				selection = {back: otherEvents.back, pgn: otherEvents.pgn, board: otherEvents.board, highscore: otherEvents.highscore, options: otherEvents.options};
+				selection = {back: otherEvents.back, undo: otherEvents.undo, pgn: otherEvents.pgn, board: otherEvents.board, highscore: otherEvents.highscore, options: otherEvents.options};
 				provide_select("info");
 			},
 		},
@@ -387,12 +403,7 @@ function load(key) {
 		board: { // show board
 			symbol: iconize('board'),
 			onclick: function(){
-				clean();
-				let b = buildBoard(chess.fen(), data.lastmove);
-				b.classList.add('singleBoard');					
-				// on click, go back to game
-				b.addEventListener("click", function (){ turn_player(); });									
-				content.appendChild(b);
+				showBoard(turn_player);
 			}
 		},
 		highscore: {  // show wins and losses
@@ -557,6 +568,16 @@ function load(key) {
 	    message.addEventListener("click", fn);
 	}
 
+	// shows the current Board
+	// argument is function to trigger if clicked
+	function showBoard(fn) {
+		clean();
+		let b = buildBoard(chess.fen(), data.lastmove);
+		b.classList.add('singleBoard');					
+		b.addEventListener("click", fn);
+		content.appendChild(b);			
+	}
+	
 	// reduce the list of possible moves to only a list of
 	// unique "key"s (e.g., unique files, ranks, or pieces)
 	// and add a function which is executed on click
@@ -712,12 +733,7 @@ function load(key) {
 			enginemove.removeEventListener("click",f);
 			data.lastmove = enginemove.innerHTML;
 			if (options.alwaysShowBoard.set) {
-				clean();
-				let b = buildBoard(chess.fen(), data.lastmove);
-				b.classList.add('singleBoard');					
-				// on click, go back to game
-				b.addEventListener("click", function (){ run(); });									
-				content.appendChild(b);			
+				showBoard(run);
 			}
 			else {
 				run();
