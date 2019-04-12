@@ -332,7 +332,7 @@ function load(key) {
 		s.classList.add('icon');
 		s.classList.add(icon);
 		s.innerHTML = '<use xlink:href="css/'+icon+'.svg#icon_'+icon+'"></use>';
-		return s.outerHTML;
+		return s.outerHTML;		
 	}
 
 	// provide some options to toggle on/off
@@ -382,7 +382,7 @@ function load(key) {
 						showBoard(turn_player);
 					},
 					},
-					{ symbol: 'do not', onclick: function() {turn_player} }// step back from the undo
+					{ symbol: 'do not', onclick: turn_player }// step back from the undo
 				)
 			}
 		},
@@ -559,7 +559,7 @@ function load(key) {
 	function showPGN(fn) {
 	    var message = document.createElement("span");
 	    message.id = "pgn";
-	    message.innerHTML = "PGN<br/>"+chess.pgn({ max_width: 5, newline_char: '<br />' });
+	    message.innerHTML = "Game History<br/>"+chess.pgn({ max_width: 5, newline_char: '<br />' });
 	    content.innerHTML = "";
 	    content.appendChild(message);
 	    // TODO: Scroll using bezel
