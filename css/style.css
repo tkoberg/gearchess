@@ -103,33 +103,6 @@ pre {
 	width: 50px;
 }
 
-.optionsList {
-	list-style-type: none;
-	font-size: 15px;
-	width: 80%;
-	text-align: left;
-}
-
-.optionsText {
-	padding-left: 10px;
-	line-height: 50px;
-	display: inline-block;	
-}
-
-.optionsToggle {
-	display: inline-block;
-	vertical-align: middle;
-	width: 50px;
-}
-
-.toggle_off {
-	fill: #444;
-}
-
-.toggle_on {
-	fill: #fff;
-}
-
 .nodescending {
 	padding-bottom: 5%;
 }

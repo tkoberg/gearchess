@@ -244,6 +244,36 @@ function load(key) {
 		// tag the selected element
 		tagSelected(list[ci]);
 	}
+
+	// this happens when the bezel/mouse-wheel is turned: 
+	// next/previous element in list is tagged (version for options menu)
+	function turn_bezel_options(ev) {
+		
+		let dir = ev.detail.direction;
+		if (dir) { dir = (dir==="CW")?1:-1;	} // Bezel is used
+		else     { dir = ev.deltaY;			} // Mousewheel is used
+
+		// get a list of all items and check which one is
+		// currently selected (if none, select the first)
+		let list = document.getElementsByTagName("li");
+		var ci = -1;
+		for (var i = 0; i < list.length; i++) {
+			 if(list[i].id==="selectedOption"){
+				ci = i;
+			}
+			list[i].id = "";
+		}
+		
+		// change to which direction?
+		if (dir>0) { ci = (ci===(list.length-1))?0:(ci+1); } // clockwise
+		if (dir<0) { ci = (ci<=0)? (list.length-1):(ci-1); } // counterclockwise
+						
+		// tag the selected element,  show next and previous elements
+		list[ci].id="selectedOption";
+		if (ci>0)             { list[ci-1].id="previousOption"; }
+		if (ci<list.length-1) { list[ci+1].id="nextOption"; }
+	}
+
 	
 	// tag (i.e. focus on) the currently selected list element
 	function tagSelected(el) {
@@ -308,7 +338,7 @@ function load(key) {
 		}
 		inner.setAttribute("style","--scale:"+ innerScale);
 		
-		if(innerText=="g") { inner.classList.add("nodescending"); } // move 'g' a little bit up (only descending letter used)
+		if(innerText==="g") { inner.classList.add("nodescending"); } // move 'g' a little bit up (only descending letter used)
 		
 		content.appendChild(inner);
 	}
@@ -339,25 +369,30 @@ function load(key) {
 	}
 
 	// provide some options to toggle on/off
+	// set is either loaded from previous save, or set default to true/false
 	var options = {
 		hint: {  // show pondering as a hint
-			note:   'show hint',
-			set:    false,
+			tag:    'hint',
+			note:   "show a hint for the next move (engine's ponder)",
+			set:    (load("options:hint") || "false") === 'true',
 			fixed: true,
 		},
 		score: {  // show current imbalance of game
-			note:   'show score',
-			set:    true,
+			tag:    'score',
+			note:   'shows the current centipawn score during engine move',
+			set:    (load("options:score") || "true") === 'true',
 			fixed: false,
 		},
 		queenpromote: {  // always promote to queen
-			note:   'always promote to queen',
-			set:    true,
+			tag:    'queen',
+			note:   'always promote pawns directly to queen',
+			set:    (load("options:queenpromote") || "true") === 'true',
 			fixed: true,
 		},
 		alwaysShowBoard: {  // always show the board after the engine moved
-			note:   'show board after turn',
-			set:   false,
+			tag:    'board',
+			note:   'shows the board after each engine turn',
+			set:    (load("options:alwaysShowBoard") || "false") === 'true',
 			fixed: false,
 		},
 		
@@ -386,7 +421,7 @@ function load(key) {
 					},
 					},
 					{ symbol: 'do not', onclick: otherEvents.info.onclick }// step back from the undo
-				)
+				);
 			}
 		},
 		info:{ // Show some infos
@@ -434,19 +469,27 @@ function load(key) {
 		options:{ // Show some infos
 			symbol: iconize('options'),
 			onclick: function() {
+
+				clean();
 				let opt = document.createElement("ul");
-				opt.id = "menu";
-				opt.classList.add('optionsList');
+				opt.id = "optionsList";
 		
 				Object.keys(options).forEach(function (key, i) {
 					let state = (options[key].set)? "on": "off"; // current state: on or off?
 
 					let o  = document.createElement("li");
+					if (i===0) { o.id = "selectedOption"; }
+					if (i===1) { o.id = "nextOption";     }
 
+					
 					let ot = document.createElement("span");
-					ot.classList.add('optionsText');
-					ot.innerHTML = options[key].note;
+					ot.classList.add('optionsTag');
+					ot.innerHTML = options[key].tag;
 
+					let on = document.createElement("span");
+					on.classList.add('optionsNote');
+					on.innerHTML = options[key].note;
+					
 					let oo = document.createElement("span");
 					oo.classList.add('optionsToggle');
 					oo.innerHTML = iconize('toggle_'+state);
@@ -455,21 +498,45 @@ function load(key) {
 							options[key].set = !options[key].set;
 							state = (options[key].set)? "on": "off";
 							oo.innerHTML = iconize('toggle_'+state);
+							save("options:"+key, options[key].set);
 						});
 					}
 					o.appendChild(oo);
 					o.appendChild(ot);
+					o.appendChild(on);
 					opt.appendChild(o);
 				});
 		
-				let back = document.createElement("li");
-				back.addEventListener("click", otherEvents.info.onclick);
-				back.innerHTML = 'save and go back to menu';
-				back.setAttribute("style", "margin-left: 60px");
-				opt.appendChild(back);
+				let b = document.createElement("li");
+				b.addEventListener("click", function fn() {
+					document.removeEventListener('wheel', turn_bezel_options);
+					document.removeEventListener('rotarydetent', turn_bezel_options);
+					otherEvents.info.onclick();
+				});
+				
 
+				let bt = document.createElement("span");
+				bt.classList.add('optionsTag');
+				bt.innerHTML = 'back';
+
+				let bn = document.createElement("span");
+				bn.classList.add('optionsNote');
+				bn.innerHTML = 'save and go back to menu';
+					
+				let bo = document.createElement("span");
+				bo.classList.add('optionsToggle');
+				bo.innerHTML = iconize('cancel');
+
+				b.appendChild(bo);
+				b.appendChild(bt);
+				b.appendChild(bn);
+				opt.appendChild(b);
+				
 				content.innerHTML = "";
 				content.appendChild(opt);
+				
+				document.addEventListener('wheel', turn_bezel_options);
+				document.addEventListener('rotarydetent', turn_bezel_options);
 			},
 		},
 		newGame: {

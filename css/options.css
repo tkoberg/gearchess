@@ -1,0 +1,70 @@
+#optionsList {
+	position: absolute;
+	list-style-type: none;
+	font-size: 15px;
+	width: 300px;
+	text-align: left;
+	margin:0;
+	padding:0;
+}
+
+#optionsList li{
+	display: none;
+}
+.optionsTag {
+	padding-left: 5px;
+	display: inline;	
+}
+.optionsNote {
+	font-size: 40%;
+	display: block;	
+	text-align: center;
+	color: #ccc;
+	margin-top: -10px;
+	padding: 0 15px 10px 5px;
+}
+
+.optionsToggle {
+	display: inline-block;
+	vertical-align: middle;
+	width: 50px;
+}
+
+.toggle_off {
+	fill: #444;
+}
+
+.toggle_on {
+	fill: #fff;
+}
+
+#optionsList #selectedOption{
+	position: absolute;
+	display: block;
+	top: 100px;
+	left: 0px;
+	background-color: rgba(188, 102, 9,0.2);
+	padding-left: 5px;
+	transform: scale(2.5);
+	transform-origin: 0 0;
+	width: 47%;
+}
+
+#optionsList #previousOption .optionsNote,
+#optionsList #nextOption .optionsNote {
+	display: none;
+}
+
+#optionsList #nextOption {
+	position: absolute;
+	display: block;
+	top: 280px;
+	left: 80px;
+}
+
+#optionsList #previousOption {
+	position: absolute;
+	display: block;
+	top: 40px;
+	left: 80px;
+}
