@@ -385,7 +385,7 @@ function load(key) {
 						showBoard(turn_player);
 					},
 					},
-					{ symbol: 'do not', onclick: turn_player }// step back from the undo
+					{ symbol: 'do not', onclick: otherEvents.info.onclick }// step back from the undo
 				)
 			}
 		},
@@ -400,13 +400,13 @@ function load(key) {
 		pgn: { // show PGN
 			symbol: iconize('pgn'),
 			onclick: function(){
-				showPGN(turn_player);
+				showPGN(otherEvents.info.onclick);
 			}
 		},
 		board: { // show board
 			symbol: iconize('board'),
 			onclick: function(){
-				showBoard(turn_player);
+				showBoard(otherEvents.info.onclick);
 			}
 		},
 		highscore: {  // show wins and losses
@@ -428,7 +428,7 @@ function load(key) {
 				content.innerHTML = "";
 				content.appendChild(message);
 				// on click, back to main menu
-				message.addEventListener("click", turn_player);
+				message.addEventListener("click", otherEvents.info.onclick);
 			},
 		},
 		options:{ // Show some infos
@@ -463,8 +463,7 @@ function load(key) {
 				});
 		
 				let back = document.createElement("li");
-				back.addEventListener("click", turn_player);
-				//back.addEventListener("click", otherEvents.info.onclick); // or just go back to info menu?
+				back.addEventListener("click", otherEvents.info.onclick);
 				back.innerHTML = 'save and go back to menu';
 				back.setAttribute("style", "margin-left: 60px");
 				opt.appendChild(back);
