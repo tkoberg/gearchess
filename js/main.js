@@ -181,7 +181,6 @@ function load(key) {
 		// dummy which will be replaced later
 		var innerStub = document.createElement("span");
 		innerStub.id = "centerselection";
-		innerStub.classList.add('center');
 
 		var n = Object.keys(selection).length; // number of elements 
 		sortedKeys(selection).forEach(function (key, i) {
@@ -269,6 +268,8 @@ function load(key) {
 		// clone the inner element (we have to overwrite it!)
 		let inner_old = document.getElementById('centerselection');
 		let inner     = inner_old.cloneNode(true);
+		inner.className = "";
+		inner.classList.add('center');
 		content.replaceChild(inner, inner_old);
 		
 		// add the provided event listener
@@ -306,6 +307,8 @@ function load(key) {
 			case 6: innerScale = 1.0; break;
 		}
 		inner.setAttribute("style","--scale:"+ innerScale);
+		
+		if(innerText=="g") { inner.classList.add("nodescending"); } // move 'g' a little bit up (only descending letter used)
 		
 		content.appendChild(inner);
 	}
